@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coolors Clone</title>
+   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="font-sans bg-white">
+
+  <!-- Top Navbar -->
+  <div class="flex justify-between items-center px-6 py-4 shadow">
+    <div class="flex items-center gap-2">
+        <img src="./logo.png" alt="Coolors Logo" class="h-8 ">
+        <span class="text-gray-600 text-sm">Press the spacebar to generate color palettes!</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <button class="text-gray-600 text-sm">Tools</button>
+      <button class="text-gray-600 text-sm">Sign in</button>
+      <button class="bg-blue-500 text-white px-3 py-1 rounded text-sm">Sign up</button>
+    </div>
+  </div>
+
+  <!-- Small toolbar under navbar -->
+  <div class="flex justify-end gap-4 px-4 py-2 text-gray-600 text-sm border-b">
+    <span>View</span>
+    <span>Export</span>
+    <span>Save</span>
+  </div>
+
+  <!-- Color Palette Section -->
+  <div class="flex h-[85vh]">
+    <!-- Color 1 -->
+    <div class="flex-1 flex flex-col justify-center items-center bg-[#114B5F] text-white">
+      <h2 class="text-3xl font-bold">114B5F</h2>
+      <p class="text-sm mt-2">Midnight green</p>
+    </div>
+    <!-- Color 2 -->
+    <div class="flex-1 flex flex-col justify-center items-center bg-[#456990] text-white">
+      <h2 class="text-3xl font-bold">456990</h2>
+      <p class="text-sm mt-2">Lapis Lazuli</p>
+    </div>
+    <!-- Color 3 -->
+    <div class="flex-1 flex flex-col justify-center items-center bg-[#E4FDE1] text-gray-800">
+      <h2 class="text-3xl font-bold">E4FDE1</h2>
+      <p class="text-sm mt-2">Nyanza</p>
+    </div>
+    <!-- Color 4 -->
+    <div class="flex-1 flex flex-col justify-center items-center bg-[#F45B69] text-white">
+      <h2 class="text-3xl font-bold">F45B69</h2>
+      <p class="text-sm mt-2" id="color">Bright pink (Crayola)</p>
+    </div>
+    <!-- Color 5 -->
+    <div class="flex-1 flex flex-col justify-center items-center bg-[#6B2737] text-white">
+      <h2 class="text-3xl font-bold">6B2737</h2>
+      <p class="text-sm mt-2">Wine</p>
+    </div>
+  </div>
+<script src="./script.js"></script>
+</body>
+</html>
