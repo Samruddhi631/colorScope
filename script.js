@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const decreaseColorsBtn = document.getElementById('decreaseColors');
   const increaseColorsBtn = document.getElementById('increaseColors');
   const colorCountDisplay = document.getElementById('colorCountDisplay');
+  const toolsBtn = document.getElementById("toolsBtn");
+  const toolsDropdown = document.getElementById("toolsDropdown");
 
   // ---------- History ----------
   let history = JSON.parse(localStorage.getItem('paletteHistory')) || [];
@@ -311,4 +313,22 @@ document.addEventListener('DOMContentLoaded', () => {
   if (currentIndex < 0 || history.length === 0) newPalette();
   else renderPalette(history[currentIndex]);
   updateButtons();
+
+
+  toolsBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toolsDropdown.classList.toggle("hidden");
+  });
+
+  // Close dropdown on outside click
+  document.addEventListener("click", (e) => {
+    if (!toolsDropdown.contains(e.target) && !toolsBtn.contains(e.target)) {
+      toolsDropdown.classList.add("hidden");
+    }
+  });
+
+  // Close dropdown on ESC
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") toolsDropdown.classList.add("hidden");
+  });
 });
