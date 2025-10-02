@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gradient Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/feather-icons"></script>
+</head>
+  <style>
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 10px;
+      border-radius: 5px;
+      outline: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      background: white;
+      border: 2px solid #3b82f6;
+      cursor: pointer;
+    }
+    input[type="range"]::-moz-range-thumb {
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      background: white;
+      border: 2px solid #3b82f6;
+      cursor: pointer;
+    }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #333;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      z-index: 9999;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body class="bg-white text-gray-800">
+
+  <!-- Navigation -->
+   <nav class="flex justify-between shadow items-center px-4 py-3 border-b-[0.5px] border-gray-200">
+    <!-- Left side -->
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded flex items-center justify-center">
+        <span class="text-white font-bold text-sm">C</span>
+      </div>
+      <span class="font-bold text-lg">ColorScope</span>
+    </div>
+    <!-- Right side -->
+    <div class="flex items-center gap-4">
+    <!-- Tools Dropdown -->
+    <div class="relative">
+          <button id="toolsBtn" class="text-gray-600 text-base font-medium flex hover:text-blue-600 transition-colors">
+            Tools <i data-feather="chevron-down" class="w-4 h-4 mt-1.5"></i>
+          </button>
+
+          <!-- Dropdown Menu -->
+           <div id="toolsDropdown"
+            class="hidden overflow-hidden absolute right-0 mt-2 w-[100vh] h-[34vw] bg-white flex gap-5 rounded-xl shadow-xl border border-gray-200 z-50">
+            
+            <div class="flex flex-col m-4">
+              <!-- Left Column -->
+                <a href="index.html" class="group block rounded-xl hover:bg-green-100 cursor-pointer p-3 gap-4 flex">
+                <img src="assets/menu_icon_generate.svg" class="w-14 h-14" alt="">
+                <div class="flex flex-col">
+                    <h2 class="font-bold text-2xl text-gray-800 group-hover:text-green-800">Palette Generator</h2>
+                    <p class="text-gray-500 text-sm font-semibold">Create your palettes in seconds</p>
+                    </div>
+                  </a>
+              <a href="explorePallete.html" class="group block rounded-xl hover:bg-pink-100 cursor-pointer p-3 gap-4 flex">
+                <img src="assets/menu_icon_explore.svg" class="w-14 h-14" alt="">
+                <div class="flex flex-col">
+                    <h2 class="font-bold text-2xl text-gray-800 group-hover:text-pink-800">Explore Palettes</h2>
+                    <p class="text-gray-500 text-sm font-semibold">Browse millions of trending color schemes</p>
+                </div>
+              </a>
+
+              <a href="imagePicker.html" class="group block rounded-xl hover:bg-blue-100 cursor-pointer p-3 gap-4 flex">
+                <img src="assets/menu_icon_image_picker.svg" class="w-14 h-14" alt="" />
+                <div class="flex flex-col">
+                <h2 class="font-bold text-2xl text-gray-800 group-hover:text-blue-800">Image Picker</h2>
+                <p class="text-gray-500 text-sm font-semibold">Get beautiful palettes from your photos</p>
+                </div>
+              </a>
+
+              <a href="contrastChecker.html" class="group block rounded-xl hover:bg-yellow-100 cursor-pointer p-3 gap-4 flex">
+                <img src="assets/menu_icon_contrast_checker.svg" class="w-14 h-14" alt="">
+                <div class="flex flex-col">
+                    <h2 class="font-bold text-2xl text-gray-800 group-hover:text-yellow-800">Contrast Checker</h2>
+                    <p class="text-gray-500 text-sm font-semibold">Check the contrast between two colors</p>
+                </div>
+              </a>
+              
+                <a href="gradientGenerator.html" class="group block rounded-xl hover:bg-purple-100 cursor-pointer p-3 gap-4 flex">
+                <img src="assets/menu_icon_visualizer.svg" class="w-14 h-14" alt="">
+                <div class="flex flex-col">
+                    <h2 class="font-bold text-2xl text-gray-800 group-hover:text-purple-800" >Gradient Generator</h2>
+                    <p class="text-gray-500 text-sm font-semibold">Preview your colors on real designs</p>
+                </div>
+              </a>
+            </div>
+            <!-- Right Column (Links) -->
+              <div class="px-10 py-10 text-base text-black flex flex-col bg-gray-100 rounded-r-xl">
+                <span class="hover:text-blue-600 cursor-pointer font-medium">List of colors</span>
+                <span class="hover:text-blue-600 cursor-pointer font-medium">Browse Gradients</span>
+                <span class="hover:text-blue-600 cursor-pointer font-medium">Create a Gradient</span>
+                <span class="hover:text-blue-600 cursor-pointer font-medium">Make a Gradient Palette</span>
+                <span class="hover:text-blue-600 cursor-pointer font-medium">Color Picker</span>
+                <span class="hover:text-blue-600 cursor-pointer font-medium">Collage Maker</span>
+                <span class="hover:text-blue-600 cursor-pointer font-medium">List of Fonts</span>
+                <span class="hover:text-blue-600 cursor-pointer font-medium">Image Converter</span>
+              </div>
+          </div>
+        </div>
+      <div class="h-8 w-px bg-gray-300 mx-1"></div>
+      <button class="text-pink-500 text-bse font-medium hover:text-pink-600 transition-colors">Go Pro</button>
+      <button class="text-gray-600 text-base hover:text-gray-800 transition-colors">Sign in</button>
+      <button class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors">Sign up</button>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <div class="flex flex-wrap md:flex-nowrap gap-8 p-10">
+    <!-- Left Controls -->
+    <div class="flex-1 bg-white border rounded-xl shadow p-8 flex flex-col justify-between">
+      <!-- Gradient Slider -->
+      <div class="mb-6">
+        <input id="position1" type="range" min="0" max="100" value="0" class="w-full mb-2">
+        <input id="position2" type="range" min="0" max="100" value="100" class="w-full">
+      </div>
+
+      <div class="grid grid-cols-2 gap-6">
+        <div>
+          <label class="block font-semibold mb-2">Color 1</label>
+          <input id="color1" type="color" value="#ff0000" class="w-24 h-12 border rounded">
+        </div>
+        <div>
+          <label class="block font-semibold mb-2">Color 2</label>
+          <input id="color2" type="color" value="#0000ff" class="w-24 h-12 border rounded">
+        </div>
+        <div>
+          <label class="block font-semibold mb-2">Rotation</label>
+          <select id="rotation" class="w-full border p-2 rounded">
+            <option value="90deg">90°</option>
+            <option value="180deg">180°</option>
+            <option value="270deg">270°</option>
+            <option value="360deg">360°</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-semibold mb-2">Type</label>
+          <select id="type" class="w-full border p-2 rounded">
+            <option value="linear">Linear</option>
+            <option value="radial">Radial</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex justify-between mt-8">
+        <button onclick="randomGradient()" class="px-6 py-3 bg-gray-100 border rounded-lg font-semibold hover:bg-gray-200">Random</button>
+        <button onclick="copyCSS()" class="px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600">Copy CSS</button>
+      </div>
+    </div>
+
+    <!-- Right Preview -->
+    <div id="gradientPreview" class="flex-1 rounded-xl shadow border" style="min-height:400px;"></div>
+  </div>
+
+  <!-- Example Gradients -->
+  <div class="p-10">
+    <h2 class="text-2xl font-bold text-center mb-6">Example gradients</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mb-20">
+      <div class="h-32 rounded-lg cursor-pointer" data-gradient="linear-gradient(90deg, #00ff99 0%, #00e0ff 100%)" style="background: linear-gradient(90deg, #00ff99, #00e0ff)"></div>
+      <div class="h-32 rounded-lg cursor-pointer" data-gradient="linear-gradient(90deg, #0061ff 0%, #60efff 100%)" style="background: linear-gradient(90deg, #0061ff, #60efff)"></div>
+      <div class="h-32 rounded-lg cursor-pointer" data-gradient="linear-gradient(90deg, #ff3c7b 0%, #60a6ff 100%)" style="background: linear-gradient(90deg, #ff3c7b, #60a6ff)"></div>
+      <div class="h-32 rounded-lg cursor-pointer" data-gradient="linear-gradient(90deg, #4286f4 0%, #db38f0 100%)" style="background: linear-gradient(90deg, #4286f4, #db38f0)"></div>
+      <div class="h-32 rounded-lg cursor-pointer" data-gradient="linear-gradient(90deg, #ff8008 0%, #ffc837 100%)" style="background: linear-gradient(90deg, #ff8008, #ffc837)"></div>
+      <div class="h-32 rounded-lg cursor-pointer" data-gradient="linear-gradient(90deg, #ff416c 0%, #ff4b2b 100%)" style="background: linear-gradient(90deg, #ff416c, #ff4b2b)"></div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast">Copied to clipboard!</div>
+
+  <script>
+    const preview = document.getElementById("gradientPreview");
+    const color1 = document.getElementById("color1");
+    const color2 = document.getElementById("color2");
+    const pos1 = document.getElementById("position1");
+    const pos2 = document.getElementById("position2");
+    const rotation = document.getElementById("rotation");
+    const type = document.getElementById("type");
+
+    function updateGradient() {
+      const c1 = color1.value;
+      const c2 = color2.value;
+      const p1 = pos1.value + "%";
+      const p2 = pos2.value + "%";
+      const rot = rotation.value;
+      const t = type.value;
+
+      let gradient = t === "linear"
+        ? `linear-gradient(${rot}, ${c1} ${p1}, ${c2} ${p2})`
+        : `radial-gradient(circle, ${c1} ${p1}, ${c2} ${p2})`;
+
+      preview.style.background = gradient;
+      pos1.style.background = gradient;
+      pos2.style.background = gradient;
+    }
+
+    function randomGradient() {
+      color1.value = "#" + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+      color2.value = "#" + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+      pos1.value = Math.floor(Math.random()*50);
+      pos2.value = 50 + Math.floor(Math.random()*50);
+      rotation.value = ["90deg", "180deg", "270deg", "360deg"][Math.floor(Math.random()*4)];
+      type.value = Math.random() > 0.5 ? "linear" : "radial";
+      updateGradient();
+    }
+
+    function copyCSS() {
+      navigator.clipboard.writeText(preview.style.background);
+      showToast();
+    }
+
+    function showToast() {
+      const toast = document.getElementById("toast");
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2000);
+    }
+
+    [color1, color2, pos1, pos2, rotation, type].forEach(el => {
+      el.addEventListener("input", updateGradient);
+      el.addEventListener("change", updateGradient);
+    });
+
+    // Example gradient click
+    document.querySelectorAll(".grid div").forEach(div => {
+      div.addEventListener("click", () => {
+        let gradient = div.getAttribute("data-gradient");
+        preview.style.background = gradient;
+
+        // Try to parse back into inputs
+        let match = gradient.match(/gradient\(([^,]+),\s*(#[0-9a-fA-F]+)\s*(\d+%)?,\s*(#[0-9a-fA-F]+)\s*(\d+%)?\)/);
+        if (match) {
+          rotation.value = match[1].includes("deg") ? match[1] : "90deg";
+          color1.value = match[2];
+          pos1.value = match[3] ? parseInt(match[3]) : 0;
+          color2.value = match[4];
+          pos2.value = match[5] ? parseInt(match[5]) : 100;
+          type.value = match[0].startsWith("linear") ? "linear" : "radial";
+        }
+
+        updateGradient();
+      });
+    });
+
+    updateGradient();
+     toolsBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toolsDropdown.classList.toggle("hidden");
+  });
+
+  // Close dropdown on outside click
+  document.addEventListener("click", (e) => {
+    if (!toolsDropdown.contains(e.target) && !toolsBtn.contains(e.target)) {
+      toolsDropdown.classList.add("hidden");
+    }
+  });
+
+  // Close dropdown on ESC
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") toolsDropdown.classList.add("hidden");
+  });
+  feather.replace();
+  </script>
+</body>
+</html>

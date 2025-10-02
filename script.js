@@ -1,334 +1,839 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const back = document.getElementById('back');
-  const forward = document.getElementById('forward');
-  const colorPalette = document.getElementById('colorPalette');
-  const paletteInfo = document.getElementById('paletteInfo');
-  const copyNotification = document.getElementById('copyNotification');
-  const decreaseColorsBtn = document.getElementById('decreaseColors');
-  const increaseColorsBtn = document.getElementById('increaseColors');
-  const colorCountDisplay = document.getElementById('colorCountDisplay');
-  const toolsBtn = document.getElementById("toolsBtn");
-  const toolsDropdown = document.getElementById("toolsDropdown");
+// =============================================================================
+// COLOR PALETTE GENERATOR - OPTIMIZED FOR UI/UX DESIGN
+// =============================================================================
 
-  // ---------- History ----------
-  let history = JSON.parse(localStorage.getItem('paletteHistory')) || [];
-  let currentIndex = parseInt(localStorage.getItem('paletteIndex')) || -1;
-
-  // ---------- Config ----------
-  let colorCount = 5; // default number of colors
-
-  // ---------- Utility ----------
-  function randomInt(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
+class ColorPaletteGenerator {
+  constructor() {
+    this.init();
   }
 
-  function hslToHex(h, s, l) {
-    s /= 100; l /= 100;
+  // =============================================================================
+  // INITIALIZATION
+  // =============================================================================
+  
+  init() {
+    this.state = {
+      currentPalette: null,
+      history: JSON.parse(localStorage.getItem('paletteHistory')) || [],
+      historyIndex: parseInt(localStorage.getItem('paletteIndex')) || -1,
+      colorCount: 5,
+      paletteType: 'ui-design',
+      isGenerating: false
+    };
+
+    this.bindEvents();
+    this.initializeFeatherIcons();
+    this.loadInitialPalette();
+  }
+
+  bindEvents() {
+    // Core controls
+    document.getElementById('undoBtn').addEventListener('click', () => this.undo());
+    document.getElementById('redoBtn').addEventListener('click', () => this.redo());
+    document.getElementById('decreaseColors').addEventListener('click', () => this.adjustColorCount(-1));
+    document.getElementById('increaseColors').addEventListener('click', () => this.adjustColorCount(1));
+    
+    // Palette type selector
+    // Tools dropdown (original functionality)
+    document.getElementById('toolsBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('toolsDropdown').classList.toggle('hidden');
+    });
+
+    // Palette type selector
+    document.getElementById('paletteTypeBtn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('paletteTypeDropdown').classList.toggle('hidden');
+    });
+    
+    document.querySelectorAll('.palette-type-option').forEach(option => {
+      option.addEventListener('click', () => {
+        this.setPaletteType(option.dataset.type);
+      });
+    });
+
+    // Export functionality
+    document.getElementById('exportBtn').addEventListener('click', () => this.showExportModal());
+    document.getElementById('closeExportModal').addEventListener('click', () => this.hideExportModal());
+    
+    document.querySelectorAll('.export-option').forEach(option => {
+      option.addEventListener('click', () => {
+        this.exportPalette(option.dataset.format);
+      });
+    });
+
+    // Global keyboard shortcuts
+    document.addEventListener('keydown', (e) => this.handleKeyboard(e));
+    
+    // Close dropdowns on outside click
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#toolsBtn')) {
+        document.getElementById('toolsDropdown').classList.add('hidden');
+      }
+      if (!e.target.closest('#paletteTypeBtn')) {
+        document.getElementById('paletteTypeDropdown').classList.add('hidden');
+      }
+    });
+
+    // Close dropdowns on ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.getElementById('toolsDropdown').classList.add('hidden');
+        document.getElementById('paletteTypeDropdown').classList.add('hidden');
+      }
+    });
+  }
+
+  initializeFeatherIcons() {
+    if (typeof feather !== 'undefined') {
+      feather.replace();
+    }
+  }
+
+  loadInitialPalette() {
+    if (this.state.historyIndex >= 0 && this.state.history.length > 0) {
+      this.renderPalette(this.state.history[this.state.historyIndex]);
+    } else {
+      this.generateNewPalette();
+    }
+    this.updateUI();
+  }
+
+  // =============================================================================
+  // CORE COLOR THEORY & ALGORITHMS
+  // =============================================================================
+
+  // Enhanced color conversion with better precision
+  hslToHex(h, s, l) {
+    h = ((h % 360) + 360) % 360; // Normalize hue
+    s = Math.max(0, Math.min(100, s)) / 100; // Clamp saturation
+    l = Math.max(0, Math.min(100, l)) / 100; // Clamp lightness
+
     const k = n => (n + h / 30) % 12;
     const a = s * Math.min(l, 1 - l);
     const f = n =>
       Math.round(
         (l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)))) * 255
       );
-    return `#${f(0).toString(16).padStart(2, '0')}${f(8)
-      .toString(16)
-      .padStart(2, '0')}${f(4).toString(16).padStart(2, '0')}`;
+    
+    const r = f(0).toString(16).padStart(2, '0');
+    const g = f(8).toString(16).padStart(2, '0');
+    const b = f(4).toString(16).padStart(2, '0');
+    
+    return `#${r}${g}${b}`.toLowerCase();
   }
 
-  function getContrastColor(hex) {
-    hex = hex.replace('#', '');
-    const r = parseInt(hex.substr(0, 2), 16);
-    const g = parseInt(hex.substr(2, 2), 16);
-    const b = parseInt(hex.substr(4, 2), 16);
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    return brightness > 128 ? '#000000' : '#FFFFFF';
-  }
+  hexToHsl(hex) {
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
 
-  async function getColorName(code) {
-    const res = await fetch(`https://www.thecolorapi.com/id?hex=${code}`);
-    if (!res.ok) throw new Error('Color not found.');
-    return await res.json();
-  }
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
 
-  // ---------- Copy Notification ----------
-  async function copyToClipboard(color) {
-    try {
-      await navigator.clipboard.writeText(color);
-      copyNotification.classList.remove('invisible');
-      copyNotification.classList.add('block');
-      setTimeout(() => {
-        copyNotification.classList.add('invisible');
-        copyNotification.classList.remove('block');
-      }, 1500);
-    } catch (err) {
-      console.error(err);
+    if (max === min) {
+      h = s = 0;
+    } else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      
+      switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+        case g: h = (b - r) / d + 2; break;
+        case b: h = (r - g) / d + 4; break;
+      }
+      h /= 6;
     }
+
+    return [Math.round(h * 360), Math.round(s * 100), Math.round(l * 100)];
   }
 
-  // ---------- Palette Generators (with improvements) ----------
-  function generatePalette(harmony, baseHue, count) {
-  const colors = [];
-  let hues = [];
-
-  switch (harmony) {
-    case 'Triadic':
-      hues = [baseHue, (baseHue + 120) % 360, (baseHue + 240) % 360];
-      break;
-    case 'Split Complementary':
-    const complement = (baseHue + 180) % 360;
-    const offset = randomInt(20, 40); // wider flexible offset
-    hues = [
-    baseHue,
-    (complement - offset + 360) % 360,
-    (complement + offset) % 360,
-    ];
-    break;
-    case 'Tetradic':
-  // Wider spread instead of fixed 90°
-  const stepAngle = randomInt(60, 120); // flexible gap
-  hues = [
-    baseHue,
-    (baseHue + stepAngle) % 360,
-    (baseHue + 180) % 360,
-    (baseHue + 180 + stepAngle) % 360,
-  ];
-  break;
-
-    case 'Analogous':
-      // spread across ±60 instead of ±30
-      const step = 120 / (count - 1); // distribute evenly
-      for (let i = 0; i < count; i++) {
-        hues.push((baseHue - 60 + i * step + 360) % 360);
-      }
-      break;
-    case 'Monochromatic':
-      // vary saturation and lightness more widely
-      for (let i = 0; i < count; i++) {
-        const s = 30 + i * (50 / (count - 1)); // 30 → 80
-        const l = 20 + i * (60 / (count - 1)); // 20 → 80
-        colors.push(hslToHex(baseHue, s, l));
-      }
-      return colors;
-    case 'Natural':
-      hues = Array(count)
-        .fill(0)
-        .map((_, i) => (baseHue + i * 20) % 360);
-      break;
-  }
-
-  // generate final colors (for non-monochromatic)
-  for (let i = 0; i < count; i++) {
-    const h = hues[i % hues.length];
-    colors.push(hslToHex(h, randomInt(40, 80), randomInt(40, 80)));
-  }
-
-  return colors;
-}
-
-
-  function getRandomHarmony() {
-    const types = [
-      'Triadic',
-      'Split Complementary',
-      'Tetradic',
-      'Analogous',
-      'Monochromatic',
-      'Natural',
-    ];
-    return types[randomInt(0, types.length - 1)];
-  }
-
-  function newPalette(harmony = null, baseHue = null) {
-    const chosenHarmony = harmony || getRandomHarmony();
-    const hue = baseHue !== null ? baseHue : randomInt(0, 360);
-    const colors = generatePalette(chosenHarmony, hue, colorCount);
-
-    const palette = {
-      colors,
-      name: chosenHarmony,
-      description: `${chosenHarmony} Harmony`,
-      baseHue: hue,
+  // Calculate color contrast ratio (WCAG standards)
+  getContrastRatio(color1, color2) {
+    const getLuminance = (hex) => {
+      const rgb = [1, 3, 5].map(i => {
+        let c = parseInt(hex.slice(i, i + 2), 16) / 255;
+        return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+      });
+      return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
     };
 
-    pushPalette(palette);
-    renderPalette(palette);
-    updateButtons();
+    const lum1 = getLuminance(color1);
+    const lum2 = getLuminance(color2);
+    const brightest = Math.max(lum1, lum2);
+    const darkest = Math.min(lum1, lum2);
+    
+    return (brightest + 0.05) / (darkest + 0.05);
   }
 
-  // ---------- Render ----------
-  function createColorBox(color, colorCount) {
-    const textColor = getContrastColor(color);
+  // Get optimal text color for background
+  getOptimalTextColor(backgroundColor, options = {}) {
+    const { forceWhite, forceBlack, threshold = 4.5 } = options;
+    
+    if (forceWhite) return '#ffffff';
+    if (forceBlack) return '#000000';
 
-    // Adjust size based on colorCount
-    let padding = 'p-6';
-    let hexSize = 'text-4xl';
-    let nameSize = 'text-sm';
-    let clickSize = 'text-xs';
+    const whiteContrast = this.getContrastRatio(backgroundColor, '#ffffff');
+    const blackContrast = this.getContrastRatio(backgroundColor, '#000000');
 
-    if (colorCount >= 7) {
-      padding = 'p-3';
-      hexSize = 'text-lg';
-      nameSize = 'text-xs';
-      clickSize = 'text-[10px]';
-    } else if (colorCount === 6) {
-      padding = 'p-4';
-      hexSize = 'text-2xl';
-      nameSize = 'text-sm';
-      clickSize = 'text-xs';
-    } else if (colorCount === 5) {
-      padding = 'p-5';
-      hexSize = 'text-3xl';
-      nameSize = 'text-sm';
-      clickSize = 'text-xs';
+    // Return color that meets WCAG AA threshold, prefer higher contrast
+    if (whiteContrast >= threshold && blackContrast >= threshold) {
+      return whiteContrast > blackContrast ? '#ffffff' : '#000000';
+    } else if (whiteContrast >= threshold) {
+      return '#ffffff';
+    } else if (blackContrast >= threshold) {
+      return '#000000';
+    } else {
+      // Fallback: choose higher contrast even if below threshold
+      return whiteContrast > blackContrast ? '#ffffff' : '#000000';
+    }
+  }
+
+  // =============================================================================
+  // ADVANCED PALETTE GENERATION ALGORITHMS
+  // =============================================================================
+
+  generateUIDesignPalette(baseHue, count) {
+    const colors = [];
+    const harmonies = ['complementary', 'triadic', 'analogous', 'split-complementary'];
+    const harmony = harmonies[Math.floor(Math.random() * harmonies.length)];
+
+    switch (harmony) {
+      case 'complementary':
+        colors.push(this.hslToHex(baseHue, this.random(60, 80), this.random(45, 65))); // Primary
+        colors.push(this.hslToHex((baseHue + 180) % 360, this.random(50, 70), this.random(50, 70))); // Complement
+        break;
+        
+      case 'triadic':
+        for (let i = 0; i < Math.min(3, count); i++) {
+          const hue = (baseHue + i * 120) % 360;
+          colors.push(this.hslToHex(hue, this.random(55, 75), this.random(45, 65)));
+        }
+        break;
+        
+      case 'analogous':
+        for (let i = 0; i < count; i++) {
+          const hue = (baseHue + i * 30 - 60) % 360;
+          colors.push(this.hslToHex(hue, this.random(50, 80), this.random(40, 70)));
+        }
+        break;
+        
+      case 'split-complementary':
+        colors.push(this.hslToHex(baseHue, this.random(60, 80), this.random(45, 65))); // Base
+        colors.push(this.hslToHex((baseHue + 150) % 360, this.random(50, 70), this.random(50, 70)));
+        colors.push(this.hslToHex((baseHue + 210) % 360, this.random(50, 70), this.random(50, 70)));
+        break;
     }
 
+    // Fill remaining colors with variations
+    while (colors.length < count) {
+      const baseColor = colors[Math.floor(Math.random() * colors.length)];
+      const [h, s, l] = this.hexToHsl(baseColor);
+      const newHue = (h + this.random(-30, 30)) % 360;
+      const newSat = Math.max(20, Math.min(90, s + this.random(-20, 20)));
+      const newLight = Math.max(25, Math.min(85, l + this.random(-25, 25)));
+      colors.push(this.hslToHex(newHue, newSat, newLight));
+    }
+
+    return {
+      colors: colors.slice(0, count),
+      name: `${harmony.charAt(0).toUpperCase() + harmony.slice(1)} UI`,
+      description: `Professional UI palette using ${harmony} harmony`,
+      harmony,
+      baseHue
+    };
+  }
+
+  generateBrandIdentityPalette(baseHue, count) {
+    const colors = [];
+    
+    // Primary brand color (more saturated and confident)
+    colors.push(this.hslToHex(baseHue, this.random(70, 90), this.random(45, 55)));
+    
+    // Secondary color (complementary or near-complementary)
+    const secondaryHue = (baseHue + this.random(150, 210)) % 360;
+    colors.push(this.hslToHex(secondaryHue, this.random(60, 80), this.random(50, 60)));
+    
+    // Neutral colors for balance
+    colors.push(this.hslToHex(baseHue, this.random(10, 30), this.random(20, 30))); // Dark
+    colors.push(this.hslToHex(baseHue, this.random(5, 15), this.random(85, 95))); // Light
+    
+    // Accent color
+    if (count > 4) {
+      const accentHue = (baseHue + this.random(60, 120)) % 360;
+      colors.push(this.hslToHex(accentHue, this.random(80, 95), this.random(55, 65)));
+    }
+
+    return {
+      colors: colors.slice(0, count),
+      name: 'Brand Identity',
+      description: 'Professional brand color scheme with strong visual identity',
+      harmony: 'brand',
+      baseHue
+    };
+  }
+
+  generateIllustrationPalette(baseHue, count) {
+    const colors = [];
+    const temperature = Math.random() > 0.5 ? 'warm' : 'cool';
+    
+    if (temperature === 'warm') {
+      // Warm palette (reds, oranges, yellows)
+      for (let i = 0; i < count; i++) {
+        const hue = (baseHue + this.random(-60, 60)) % 360;
+        const adjustedHue = hue < 30 || hue > 300 ? hue : 
+                           (Math.random() > 0.5 ? hue + 180 : hue - 180);
+        colors.push(this.hslToHex(adjustedHue, this.random(60, 95), this.random(35, 75)));
+      }
+    } else {
+      // Cool palette (blues, greens, purples)
+      for (let i = 0; i < count; i++) {
+        const hue = (baseHue + this.random(-45, 45)) % 360;
+        const adjustedHue = (hue > 60 && hue < 300) ? hue : hue + 180;
+        colors.push(this.hslToHex(adjustedHue, this.random(50, 85), this.random(40, 80)));
+      }
+    }
+
+    return {
+      colors: colors.slice(0, count),
+      name: `${temperature.charAt(0).toUpperCase() + temperature.slice(1)} Illustration`,
+      description: `Creative ${temperature} palette perfect for illustrations and artwork`,
+      harmony: temperature,
+      baseHue
+    };
+  }
+
+  generateAccessibilityPalette(baseHue, count) {
+    const colors = [];
+    
+    // High contrast pairs that meet WCAG AAA standards
+    const darkColors = [
+      this.hslToHex(baseHue, 80, 20), // Very dark primary
+      this.hslToHex((baseHue + 60) % 360, 75, 25), // Dark secondary
+      this.hslToHex((baseHue + 180) % 360, 70, 22), // Dark complement
+    ];
+    
+    const lightColors = [
+      this.hslToHex(baseHue, 60, 85), // Light primary
+      this.hslToHex((baseHue + 60) % 360, 55, 90), // Light secondary
+      this.hslToHex((baseHue + 180) % 360, 50, 88), // Light complement
+    ];
+
+    // Ensure we have high contrast pairs
+    for (let i = 0; i < Math.ceil(count / 2); i++) {
+      if (i < darkColors.length) colors.push(darkColors[i]);
+      if (colors.length < count && i < lightColors.length) colors.push(lightColors[i]);
+    }
+
+    return {
+      colors: colors.slice(0, count),
+      name: 'Accessibility First',
+      description: 'WCAG AAA compliant high-contrast palette',
+      harmony: 'accessibility',
+      baseHue
+    };
+  }
+
+  // =============================================================================
+  // PALETTE GENERATION CONTROLLER
+  // =============================================================================
+
+  generateNewPalette(forceHarmony = null, forceBaseHue = null) {
+    if (this.state.isGenerating) return;
+    
+    this.state.isGenerating = true;
+    const baseHue = forceBaseHue !== null ? forceBaseHue : Math.floor(Math.random() * 360);
+    
+    let palette;
+    
+    switch (this.state.paletteType) {
+      case 'ui-design':
+        palette = this.generateUIDesignPalette(baseHue, this.state.colorCount);
+        break;
+      case 'brand-identity':
+        palette = this.generateBrandIdentityPalette(baseHue, this.state.colorCount);
+        break;
+      case 'illustration':
+        palette = this.generateIllustrationPalette(baseHue, this.state.colorCount);
+        break;
+      case 'accessibility':
+        palette = this.generateAccessibilityPalette(baseHue, this.state.colorCount);
+        break;
+      default:
+        palette = this.generateUIDesignPalette(baseHue, this.state.colorCount);
+    }
+
+    // Add to history
+    this.addToHistory(palette);
+    this.renderPalette(palette);
+    this.updateUI();
+    
+    setTimeout(() => {
+      this.state.isGenerating = false;
+    }, 100);
+  }
+
+  // =============================================================================
+  // UI RENDERING
+  // =============================================================================
+
+  renderPalette(palette) {
+    this.state.currentPalette = palette;
+    const container = document.getElementById('colorPalette');
+    container.innerHTML = '';
+
+    palette.colors.forEach((color, index) => {
+      const colorBox = this.createColorBox(color, index, palette.colors.length);
+      container.appendChild(colorBox);
+    });
+
+    this.updatePaletteInfo(palette);
+    this.analyzePalette(palette);
+    this.initializeFeatherIcons();
+  }
+
+  createColorBox(color, index, totalColors) {
+    const textColor = this.getOptimalTextColor(color);
+    const [h, s, l] = this.hexToHsl(color);
+    
     const box = document.createElement('div');
-    box.classList.add(
-      'flex-1',
-      'flex',
-      'flex-col',
-      'justify-center',
-      'items-center',
-      padding,
-      'cursor-pointer'
-    );
+    box.className = 'flex-1 relative group cursor-pointer color-transition h-[76vh] flex flex-col justify-center items-center p-6';
     box.style.backgroundColor = color;
+    
+    // Responsive text sizing based on color count
+    let hexSize = 'text-2xl md:text-3xl lg:text-4xl';
+    let detailSize = 'text-sm';
+    let spacing = 'space-y-4';
+    
+    if (totalColors >= 7) {
+      hexSize = 'text-lg md:text-xl lg:text-2xl';
+      detailSize = 'text-xs';
+      spacing = 'space-y-2';
+    } else if (totalColors === 6) {
+      hexSize = 'text-xl md:text-2xl lg:text-3xl';
+      detailSize = 'text-sm';
+      spacing = 'space-y-3';
+    }
 
     box.innerHTML = `
-      <h2 class="${hexSize} font-bold mb-2" style="color:${textColor}">${color
-      .replace('#', '')
-      .toUpperCase()}</h2>
-      <p class="color-name ${nameSize} opacity-90" style="color:${textColor}">Loading...</p>
-      <p class="${clickSize} mt-2 opacity-60" style="color:${textColor}">Click to copy</p>
+      <div class="text-center ${spacing} opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div class="space-y-2">
+          <h3 class="${hexSize} font-bold tracking-tight" style="color: ${textColor}">
+            ${color.toUpperCase()}
+          </h3>
+          <div class="${detailSize} space-y-1" style="color: ${textColor}">
+          </div>
+        </div>
+        
+        <div class="flex justify-center gap-2 mt-4">
+          <button class="copy-btn w-8 h-8 rounded-lg bg-white bg-opacity-20 hover:bg-opacity-30 color-transition flex items-center justify-center" 
+                  data-color="${color}" title="Copy HEX">
+            <i data-feather="copy" class="w-4 h-4" style="stroke: ${textColor}"></i>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Always visible color info -->
+      <div class="absolute bottom-4 left-4 right-4">
+        <div class="text-center">
+          <div class="${hexSize} font-bold" style="color: ${textColor}">
+            ${color.toUpperCase().replace('#', '')}
+          </div>
+          <div class="${detailSize} opacity-80 mt-1" style="color: ${textColor}">
+            Click to copy
+          </div>
+        </div>
+      </div>
     `;
 
-    box.addEventListener('click', () => copyToClipboard(color));
+    // Add event listeners
+    box.addEventListener('click', (e) => {
+      if (!e.target.closest('.copy-btn') && !e.target.closest('.lock-btn')) {
+        this.copyToClipboard(color);
+      }
+    });
+
+    box.querySelector('.copy-btn')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.copyToClipboard(color);
+    });
+
+    box.querySelector('.lock-btn')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.toggleColorLock(index);
+    });
+
     return box;
   }
 
-  function renderPalette(paletteData) {
-    colorPalette.innerHTML = '';
-    paletteInfo.textContent = `${paletteData.name} - ${paletteData.description}`;
+  updatePaletteInfo(palette) {
+    document.getElementById('paletteInfo').textContent = 
+      `${palette.name} • ${palette.description}`;
+  }
 
-    paletteData.colors.forEach((color) => {
-      const box = createColorBox(color, paletteData.colors.length);
-      colorPalette.appendChild(box);
+  analyzePalette(palette) {
+    // Calculate average contrast ratio
+    let totalContrast = 0;
+    let contrastPairs = 0;
+    let accessiblePairs = 0;
 
-      getColorName(color.replace('#', ''))
-        .then((data) => {
-          const nameEl = box.querySelector('.color-name');
-          if (nameEl) nameEl.textContent = data.name.value;
-        })
-        .catch(() => {
-          const nameEl = box.querySelector('.color-name');
-          if (nameEl) nameEl.textContent = 'Color';
-        });
+    for (let i = 0; i < palette.colors.length; i++) {
+      for (let j = i + 1; j < palette.colors.length; j++) {
+        const contrast = this.getContrastRatio(palette.colors[i], palette.colors[j]);
+        totalContrast += contrast;
+        contrastPairs++;
+        if (contrast >= 4.5) accessiblePairs++;
+      }
+    }
+
+    const avgContrast = contrastPairs > 0 ? (totalContrast / contrastPairs) : 0;
+    const accessibilityScore = contrastPairs > 0 ? (accessiblePairs / contrastPairs * 100) : 0;
+
+    document.getElementById('contrastScore').textContent = avgContrast.toFixed(1);
+    document.getElementById('accessibilityScore').textContent = `${Math.round(accessibilityScore)}%`;
+    document.getElementById('harmonyScore').textContent = this.getHarmonyScore(palette);
+  }
+
+  getHarmonyScore(palette) {
+    // Simple harmony scoring based on hue relationships
+    const hues = palette.colors.map(color => this.hexToHsl(color)[0]);
+    let harmonyScore = 85; // Base score
+
+    // Check for harmonic relationships
+    const relationships = [];
+    for (let i = 0; i < hues.length; i++) {
+      for (let j = i + 1; j < hues.length; j++) {
+        const diff = Math.abs(hues[i] - hues[j]);
+        const minDiff = Math.min(diff, 360 - diff);
+        relationships.push(minDiff);
+      }
+    }
+
+    // Bonus for harmonic intervals (triadic, complementary, etc.)
+    relationships.forEach(rel => {
+      if (Math.abs(rel - 60) < 15 || Math.abs(rel - 120) < 15 || Math.abs(rel - 180) < 15) {
+        harmonyScore += 5;
+      }
+    });
+
+    return Math.min(100, Math.round(harmonyScore)) + '%';
+  }
+
+  // =============================================================================
+  // USER INTERACTIONS
+  // =============================================================================
+
+  handleKeyboard(event) {
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
+    
+    switch (event.code) {
+      case 'Space':
+        event.preventDefault();
+        this.generateNewPalette();
+        break;
+      case 'ArrowLeft':
+        if (event.ctrlKey || event.metaKey) {
+          event.preventDefault();
+          this.undo();
+        }
+        break;
+      case 'ArrowRight':
+        if (event.ctrlKey || event.metaKey) {
+          event.preventDefault();
+          this.redo();
+        }
+        break;
+      case 'KeyS':
+        if (event.ctrlKey || event.metaKey) {
+          event.preventDefault();
+          this.savePalette();
+        }
+        break;
+      case 'KeyE':
+        if (event.ctrlKey || event.metaKey) {
+          event.preventDefault();
+          this.showExportModal();
+        }
+        break;
+    }
+  }
+
+  copyToClipboard(color) {
+    navigator.clipboard.writeText(color).then(() => {
+      this.showNotification(`${color} copied to clipboard!`, 'success');
+    }).catch(() => {
+      this.showNotification('Failed to copy color', 'error');
     });
   }
 
-  // ---------- History Management ----------
-  function saveHistory() {
-    localStorage.setItem('paletteHistory', JSON.stringify(history));
-    localStorage.setItem('paletteIndex', currentIndex);
-  }
-
-  function pushPalette(palette) {
-    history = history.slice(0, currentIndex + 1); // remove future
-    history.push(palette);
-    currentIndex = history.length - 1;
-    saveHistory();
-  }
-
-  function undo() {
-    if (currentIndex > 0) {
-      currentIndex--;
-      renderPalette(history[currentIndex]);
-      saveHistory();
-      updateButtons();
+  adjustColorCount(delta) {
+    const newCount = Math.max(3, Math.min(8, this.state.colorCount + delta));
+    if (newCount !== this.state.colorCount) {
+      this.state.colorCount = newCount;
+      if (this.state.currentPalette) {
+        this.generateNewPalette(this.state.currentPalette.harmony, this.state.currentPalette.baseHue);
+      }
+      document.getElementById('colorCount').textContent = this.state.colorCount;
     }
   }
 
-  function redo() {
-    if (currentIndex < history.length - 1) {
-      currentIndex++;
-      renderPalette(history[currentIndex]);
-      saveHistory();
-      updateButtons();
+  setPaletteType(type) {
+    this.state.paletteType = type;
+    const typeNames = {
+      'ui-design': 'UI Design',
+      'brand-identity': 'Brand Identity', 
+      'illustration': 'Illustration',
+      'accessibility': 'Accessibility First'
+    };
+    
+    document.getElementById('currentPaletteType').textContent = typeNames[type];
+    document.getElementById('paletteTypeDropdown').classList.add('hidden');
+    
+    if (this.state.currentPalette) {
+      this.generateNewPalette();
     }
   }
 
-  function updateButtons() {
-    setEnabled(back, currentIndex > 0);
-    setEnabled(forward, currentIndex < history.length - 1);
-    if (colorCountDisplay) colorCountDisplay.textContent = colorCount;
+  toggleColorLock(index) {
+    // TODO: Implement color locking functionality
+    this.showNotification('Color locking coming soon!', 'info');
   }
 
-  function setEnabled(el, enabled) {
-    if (!el) return;
-    if (enabled) {
-      el.classList.remove('text-gray-400', 'pointer-events-none');
-      el.classList.add('text-black', 'cursor-pointer', 'hover:text-gray-600');
+  // =============================================================================
+  // HISTORY MANAGEMENT
+  // =============================================================================
+
+  addToHistory(palette) {
+    // Remove future history if we're not at the end
+    this.state.history = this.state.history.slice(0, this.state.historyIndex + 1);
+    
+    // Add new palette
+    this.state.history.push(palette);
+    this.state.historyIndex = this.state.history.length - 1;
+    
+    // Limit history size
+    if (this.state.history.length > 50) {
+      this.state.history.shift();
+      this.state.historyIndex--;
+    }
+    
+    this.saveToLocalStorage();
+  }
+
+  undo() {
+    if (this.state.historyIndex > 0) {
+      this.state.historyIndex--;
+      this.renderPalette(this.state.history[this.state.historyIndex]);
+      this.updateUI();
+      this.saveToLocalStorage();
+    }
+  }
+
+  redo() {
+    if (this.state.historyIndex < this.state.history.length - 1) {
+      this.state.historyIndex++;
+      this.renderPalette(this.state.history[this.state.historyIndex]);
+      this.updateUI();
+      this.saveToLocalStorage();
+    }
+  }
+
+  saveToLocalStorage() {
+    localStorage.setItem('paletteHistory', JSON.stringify(this.state.history));
+    localStorage.setItem('paletteIndex', this.state.historyIndex.toString());
+  }
+
+  // =============================================================================
+  // EXPORT FUNCTIONALITY
+  // =============================================================================
+
+  showExportModal() {
+    document.getElementById('exportModal').classList.remove('hidden');
+    document.getElementById('exportModal').classList.add('flex');
+  }
+
+  hideExportModal() {
+    document.getElementById('exportModal').classList.add('hidden');
+    document.getElementById('exportModal').classList.remove('flex');
+  }
+
+  exportPalette(format) {
+    if (!this.state.currentPalette) return;
+    
+    const palette = this.state.currentPalette;
+    let exportData;
+    
+    switch (format) {
+      case 'css':
+        exportData = this.generateCSSExport(palette);
+        break;
+      case 'json':
+        exportData = this.generateJSONExport(palette);
+        break;
+      case 'adobe':
+        exportData = this.generateAdobeExport(palette);
+        break;
+      case 'url':
+        exportData = this.generateURLExport(palette);
+        break;
+    }
+    
+    if (format === 'url') {
+      navigator.clipboard.writeText(exportData);
+      this.showNotification('Shareable URL copied to clipboard!', 'success');
     } else {
-      el.classList.remove('text-black', 'cursor-pointer', 'hover:text-gray-600');
-      el.classList.add('text-gray-400', 'pointer-events-none');
+      this.downloadFile(exportData.content, exportData.filename);
+      this.showNotification(`${format.toUpperCase()} file downloaded!`, 'success');
+    }
+    
+    this.hideExportModal();
+  }
+
+  generateCSSExport(palette) {
+    const cssVars = palette.colors.map((color, index) => 
+      `  --color-${index + 1}: ${color};`
+    ).join('\n');
+    
+    const content = `:root {\n${cssVars}\n\n  /* Palette: ${palette.name} */\n  /* ${palette.description} */\n}`;
+    
+    return {
+      content,
+      filename: `palette-${palette.name.toLowerCase().replace(/\s+/g, '-')}.css`
+    };
+  }
+
+  generateJSONExport(palette) {
+    const content = JSON.stringify({
+      name: palette.name,
+      description: palette.description,
+      colors: palette.colors,
+      harmony: palette.harmony,
+      baseHue: palette.baseHue,
+      generatedAt: new Date().toISOString()
+    }, null, 2);
+    
+    return {
+      content,
+      filename: `palette-${palette.name.toLowerCase().replace(/\s+/g, '-')}.json`
+    };
+  }
+
+  generateAdobeExport(palette) {
+    // Simplified ASE-like format (would need binary encoding for real ASE)
+    const content = palette.colors.map((color, index) => {
+      const [r, g, b] = [1, 3, 5].map(i => parseInt(color.slice(i, i + 2), 16));
+      return `Color ${index + 1}: RGB(${r}, ${g}, ${b}) | HEX: ${color}`;
+    }).join('\n');
+    
+    return {
+      content: `Adobe Swatch Exchange (Simplified)\nPalette: ${palette.name}\n\n${content}`,
+      filename: `palette-${palette.name.toLowerCase().replace(/\s+/g, '-')}.ase.txt`
+    };
+  }
+
+  generateURLExport(palette) {
+    const colorString = palette.colors.map(c => c.replace('#', '')).join('-');
+    return `${window.location.origin}${window.location.pathname}?colors=${colorString}&name=${encodeURIComponent(palette.name)}`;
+  }
+
+  downloadFile(content, filename) {
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // =============================================================================
+  // UI UPDATES & NOTIFICATIONS
+  // =============================================================================
+
+  updateUI() {
+    const canUndo = this.state.historyIndex > 0;
+    const canRedo = this.state.historyIndex < this.state.history.length - 1;
+    
+    document.getElementById('undoBtn').disabled = !canUndo;
+    document.getElementById('redoBtn').disabled = !canRedo;
+    
+    if (canUndo) {
+      document.getElementById('undoBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+    } else {
+      document.getElementById('undoBtn').classList.add('opacity-50', 'cursor-not-allowed');
+    }
+    
+    if (canRedo) {
+      document.getElementById('redoBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+    } else {
+      document.getElementById('redoBtn').classList.add('opacity-50', 'cursor-not-allowed');
     }
   }
 
-  // ---------- Event Listeners ----------
-  back.addEventListener('click', undo);
-  forward.addEventListener('click', redo);
-
-  document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space') {
-      e.preventDefault();
-      newPalette();
-    } else if (e.key === 'ArrowLeft' && e.ctrlKey) {
-      e.preventDefault();
-      undo();
-    } else if (e.key === 'ArrowRight' && e.ctrlKey) {
-      e.preventDefault();
-      redo();
+  showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    const colors = {
+      success: 'bg-green-500',
+      error: 'bg-red-500',
+      info: 'bg-blue-500',
+      warning: 'bg-yellow-500'
+    };
+    
+    notification.className = `${colors[type]} text-white px-4 py-3 rounded-lg shadow-lg notification-enter flex items-center gap-2`;
+    notification.innerHTML = `
+      <i data-feather="${type === 'success' ? 'check' : type === 'error' ? 'x' : 'info'}" class="w-4 h-4"></i>
+      ${message}
+    `;
+    
+    document.getElementById('notifications').appendChild(notification);
+    
+    // Re-initialize Feather icons for the notification
+    if (typeof feather !== 'undefined') {
+      feather.replace();
     }
-  });
-
-  if (increaseColorsBtn && decreaseColorsBtn) {
-    increaseColorsBtn.addEventListener('click', () => {
-      if (colorCount < 7) {
-        colorCount++;
-        const lastPalette = history[currentIndex];
-        newPalette(lastPalette.name, lastPalette.baseHue);
-      }
-    });
-
-    decreaseColorsBtn.addEventListener('click', () => {
-      if (colorCount > 4) {
-        colorCount--;
-        const lastPalette = history[currentIndex];
-        newPalette(lastPalette.name, lastPalette.baseHue);
-      }
-    });
+    
+    setTimeout(() => {
+      notification.classList.remove('notification-enter');
+      notification.classList.add('notification-exit');
+      setTimeout(() => {
+        notification.remove();
+      }, 300);
+    }, 3000);
   }
 
-  // ---------- Init ----------
-  if (currentIndex < 0 || history.length === 0) newPalette();
-  else renderPalette(history[currentIndex]);
-  updateButtons();
+  // =============================================================================
+  // UTILITY METHODS
+  // =============================================================================
 
+  random(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
 
-  toolsBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    toolsDropdown.classList.toggle("hidden");
-  });
+  savePalette() {
+    if (!this.state.currentPalette) return;
+    
+    const saved = JSON.parse(localStorage.getItem('savedPalettes') || '[]');
+    saved.push({
+      ...this.state.currentPalette,
+      savedAt: new Date().toISOString()
+    });
+    localStorage.setItem('savedPalettes', JSON.stringify(saved));
+    this.showNotification('Palette saved successfully!', 'success');
+  }
+}
 
-  // Close dropdown on outside click
-  document.addEventListener("click", (e) => {
-    if (!toolsDropdown.contains(e.target) && !toolsBtn.contains(e.target)) {
-      toolsDropdown.classList.add("hidden");
-    }
-  });
+// =============================================================================
+// INITIALIZE APPLICATION
+// =============================================================================
 
-  // Close dropdown on ESC
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") toolsDropdown.classList.add("hidden");
-  });
+document.addEventListener('DOMContentLoaded', () => {
+  window.colorPaletteGenerator = new ColorPaletteGenerator();
+  
+  // Initialize Feather icons after DOM content is loaded
+  if (typeof feather !== 'undefined') {
+    feather.replace();
+  }
 });

@@ -3,134 +3,307 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Advanced Color Palette Generator</title>
+  <title>ColorScope - Professional UI Color Palette Generator</title>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <!-- Heroicons -->
   <script src="https://unpkg.com/feather-icons"></script>
-</head>
-<body class="font-sans bg-white relative">
-
-  <!-- Top Navbar -->
-  <div class="flex justify-between items-center px-6 py-3 shadow">
-    <!-- Left side -->
-    <div class="flex items-center gap-2">
-      <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded flex items-center justify-center">
-        <span class="text-white font-bold text-sm">C</span>
-      </div>
-      <span class="font-bold text-lg">ColorScope</span>
-    </div>
-    <!-- Right side -->
-    <div class="flex items-center gap-4">
-    <!-- Tools Dropdown -->
-    <div class="relative">
-  <button id="toolsBtn" class="text-gray-800 text-base font-medium flex hover:text-blue-600 transition-colors">
-    Tools <i data-feather="chevron-down" class="w-4 h-4 mt-1.5"></i>
-  </button>
-
-  <!-- Dropdown Menu -->
-  <div id="toolsDropdown"
-    class="hidden absolute right-0 mt-2 w-165 h-120 bg-white flex gap-5 rounded-xl shadow-xl border border-gray-200 z-50">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     
-    <div class="flex flex-col m-4">
-      <!-- Left Column -->
-      <div class=" rounded-xl hover:bg-green-100 flex cursor-pointer p-3 gap-4">
-        <img src="./menu_icon_generate.svg" class="w-14 h-14" alt="">
-        <div class="flex flex-col">
-            <h4 class="font-bold text-2xl text-gray-800 trackiing-tight">Palette Generator</h4>
-            <p class="text-gray-500 text-sm font-semibold">Create your palettes in seconds</p>
+    * {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .color-transition {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .palette-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .notification-enter {
+      animation: slideInRight 0.3s ease-out;
+    }
+    
+    .notification-exit {
+      animation: slideOutRight 0.3s ease-in;
+    }
+    
+    @keyframes slideInRight {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideOutRight {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(100%); opacity: 0; }
+    }
+    
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 3px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #a1a1a1;
+    }
+  </style>
+</head>
+<body class="font-sans bg-gray-50 relative min-h-screen">
+
+  <!-- Header Navigation -->
+  <header class="bg-white">
+    <nav class="flex justify-between shadow items-center px-6 py-4   shadow ">
+      <!-- Logo -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 gradient-bg rounded-lg flex items-center justify-center shadow-lg">
+          <span class="text-white font-bold text-lg">C</span>
+        </div>
+        <div>
+          <h1 class="font-bold text-xl text-gray-900">ColorScope</h1>
+          <p class="text-xs text-gray-500">Professional UI Palette Generator</p>
         </div>
       </div>
-      <div class="rounded-xl hover:bg-pink-100 flex cursor-pointer p-3 gap-4">
-        <img src="./menu_icon_explore.svg" class="w-14 h-14" alt="">
-        <div class="flex flex-col">
-            <h4 class="font-bold text-2xl text-gray-800">Explore Palettes</h4>
-            <p class="text-gray-500 text-sm font-semibold">Browse millions of trending color schemes</p>
+      
+      <!-- Navigation Actions -->
+      <div class="flex items-center gap-6">
+        <!-- Tools Dropdown -->
+        <div class="relative">
+          <button id="toolsBtn" class="text-pink-600 text-base font-medium flex hover:text-blue-600 transition-colors">
+            Tools <i data-feather="chevron-down" class="w-4 h-4 mt-1.5"></i>
+          </button>
+
+          <!-- Dropdown Menu -->
+          <div id="toolsDropdown"
+            class="hidden absolute right-0 mt-2 w-165 h-120 bg-white flex gap-5 rounded-xl shadow-xl border border-gray-200 z-50">
+            
+            <div class="flex flex-col m-4">
+              <!-- Left Column -->
+                <a href="index.html" class="group block rounded-xl hover:bg-green-100 cursor-pointer p-3 gap-4 flex">
+                <img src="assets/menu_icon_generate.svg" class="w-14 h-14" alt="">
+                <div class="flex flex-col">
+                    <h2 class="font-bold text-2xl text-gray-800 group-hover:text-blue-800">Palette Generator</h2>
+                    <p class="text-gray-500 text-sm font-semibold">Create your palettes in seconds</p>
+                    </div>
+                  </a>
+              <a href="explorePallete.html" class="group block rounded-xl hover:bg-pink-100 cursor-pointer p-3 gap-4 flex">
+                <img src="/assets/menu_icon_explore.svg" class="w-14 h-14" alt="">
+                <div class="flex flex-col">
+                    <h2 class="font-bold text-2xl text-gray-800 group-hover:text-pink-800">Explore Palettes</h2>
+                    <p class="text-gray-500 text-sm font-semibold">Browse millions of trending color schemes</p>
+                </div>
+              </a>
+
+              <a href="imagePicker.html" class="group block rounded-xl hover:bg-blue-100 cursor-pointer p-3 gap-4 flex">
+                <img src="assets/menu_icon_image_picker.svg" class="w-14 h-14" alt="" />
+                <div class="flex flex-col">
+                <h2 class="font-bold text-2xl text-gray-800 group-hover:text-blue-800">Image Picker</h2>
+                <p class="text-gray-500 text-sm font-semibold">Get beautiful palettes from your photos</p>
+                </div>
+              </a>
+
+              <a href="contrastChecker.html" class="group block rounded-xl hover:bg-yellow-100 cursor-pointer p-3 gap-4 flex">
+                <img src="assets/menu_icon_contrast_checker.svg" class="w-14 h-14" alt="">
+                <div class="flex flex-col">
+                    <h2 class="font-bold text-2xl text-gray-800 group-hover:text-yellow-800">Contrast Checker</h2>
+                    <p class="text-gray-500 text-sm font-semibold">Check the contrast between two colors</p>
+                </div>
+              </a>
+              
+                <a href="gradientGenerator.html" class="group block rounded-xl hover:bg-purple-100 cursor-pointer p-3 gap-4 flex">
+                <img src="assets/menu_icon_visualizer.svg" class="w-14 h-14" alt="">
+                <div class="flex flex-col">
+                    <h2 class="font-bold text-2xl text-gray-800 group-hover:text-purple-800" >Gradient Generator</h2>
+                    <p class="text-gray-500 text-sm font-semibold">Preview your colors on real designs</p>
+                </div>
+              </a>
+            </div>
+            <!-- Right Column (Links) -->
+              <div class="px-10 py-10 text-base text-black flex flex-col bg-gray-100 rounded-r-xl">
+                <span class="hover:text-blue-600 cursor-pointer font-medium">List of colors</span>
+                <span class="hover:text-blue-600 cursor-pointer font-medium">Browse Gradients</span>
+                <span class="hover:text-blue-600 cursor-pointer font-medium">Create a Gradient</span>
+                <span class="hover:text-blue-600 cursor-pointer font-medium">Make a Gradient Palette</span>
+                <span class="hover:text-blue-600 cursor-pointer font-medium">Color Picker</span>
+                <span class="hover:text-blue-600 cursor-pointer font-medium">Collage Maker</span>
+                <span class="hover:text-blue-600 cursor-pointer font-medium">List of Fonts</span>
+                <span class="hover:text-blue-600 cursor-pointer font-medium">Image Converter</span>
+              </div>
+          </div>
         </div>
-      </div>
-      <div class="rounded-xl hover:bg-yellow-100 flex cursor-pointer p-3 gap-4">
-        <img src="./menu_icon_contrast_checker.svg" class="w-14 h-14" alt="">
-        <div class="flex flex-col">
-            <h4 class="font-bold text-2xl text-gray-800">Image Picker</h4>
-            <p class="text-gray-500 text-sm font-semibold">Get beautiful palettes from your photos</p>
+        <div class="h-8 w-px bg-gray-300 mx-1"></div>
+        <div class="relative">
+          <button id="paletteTypeBtn" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 color-transition">
+            <span id="currentPaletteType">UI Design</span>
+            <i data-feather="chevron-down" class="w-4 h-4"></i>
+          </button>
+          
+          <!-- Palette Type Dropdown -->
+          <div id="paletteTypeDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 z-50 py-2">
+            <div class="palette-type-option px-4 py-3 hover:bg-blue-50 cursor-pointer" data-type="ui-design">
+              <div class="font-medium text-gray-900">UI Design</div>
+              <div class="text-sm text-gray-500">Perfect for web and mobile interfaces</div>
+            </div>
+            <div class="palette-type-option px-4 py-3 hover:bg-purple-50 cursor-pointer" data-type="brand-identity">
+              <div class="font-medium text-gray-900">Brand Identity</div>
+              <div class="text-sm text-gray-500">Corporate and brand color schemes</div>
+            </div>
+            <div class="palette-type-option px-4 py-3 hover:bg-green-50 cursor-pointer" data-type="illustration">
+              <div class="font-medium text-gray-900">Illustration</div>
+              <div class="text-sm text-gray-500">Creative and artistic palettes</div>
+            </div>
+            <div class="palette-type-option px-4 py-3 hover:bg-yellow-50 cursor-pointer" data-type="accessibility">
+              <div class="font-medium text-gray-900">Accessibility First</div>
+              <div class="text-sm text-gray-500">WCAG compliant high contrast</div>
+            </div>
+          </div>
         </div>
+        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 
+        color-transition shadow-sm">Generate</button>
       </div>
-      <div class="rounded-xl hover:bg-blue-100 flex cursor-pointer p-3 gap-4">
-        <img src="./menu_icon_image_picker.svg" class="w-14 h-14" alt="">
-        <div class="flex flex-col">
-            <h4 class="font-bold text-2xl text-gray-800">Contrast Checker</h4>
-            <p class="text-gray-500 text-sm font-semibold">Check the contrast between two colors</p>
+    </nav>
+    <!-- Control Panel -->
+    <div class="bg-white  border border-gray-200 px-6 py-2">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        
+        <!-- Left Side - Instructions -->
+        <div class="flex items-center gap-6">
+          <div>
+            <!-- <h2 class="text-lg font-semibold text-gray-900 mb-1">Generate Professional Color Palettes</h2> -->
+            <p class="text-gray-600">Press <kbd class="px-2 py-1 bg-gray-100 rounded text-xs font-mono">Space</kbd> or click Generate for new palettes</p>
+          </div>
+          <div id="paletteInfo" class="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-lg font-medium"></div>
         </div>
-      </div>
-      <div class="rounded-xl hover:bg-purple-100 flex cursor-pointer p-3 gap-4">
-        <img src="./menu_icon_visualizer.svg" class="w-14 h-14" alt="">
-        <div class="flex flex-col">
-            <h4 class="font-bold text-2xl text-gray-800">Palette Visualizer</h4>
-            <p class="text-gray-500 text-sm font-semibold">Preview your colors on real designs</p>
+        
+        <!-- Right Side - Controls -->
+        <div class="flex items-center gap-4 ">
+          <!-- Color Count -->
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-600 font-medium">Colors:</span>
+            <button id="decreaseColors" class="w-8 h-8 rounded-lg border border-gray-300 hover:border-gray-400 hover:bg-gray-50 color-transition flex items-center justify-center">
+              <i data-feather="minus" class="w-4 h-4"></i>
+            </button>
+            <span id="colorCount" class="w-8 text-center font-medium text-gray-900">5</span>
+            <button id="increaseColors" class="w-8 h-8 rounded-lg border border-gray-300 hover:border-gray-400 hover:bg-gray-50 color-transition flex items-center justify-center">
+              <i data-feather="plus" class="w-4 h-4"></i>
+            </button>
+          </div>
+          
+          <div class="w-px h-6 bg-gray-300"></div>
+          
+          <!-- History Controls -->
+          <div class="flex items-center gap-2">
+            <button id="undoBtn" class="w-8 h-8 rounded-lg border border-gray-300 hover:border-gray-400 hover:bg-gray-50 color-transition flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+              <i data-feather="arrow-left" class="w-4 h-4"></i>
+            </button>
+            <button id="redoBtn" class="w-8 h-8 rounded-lg border border-gray-300 hover:border-gray-400 hover:bg-gray-50 color-transition flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+              <i data-feather="arrow-right" class="w-4 h-4"></i>
+            </button>
+          </div>
+          
+          <div class="w-px h-6 bg-gray-300"></div>
+          
+          <!-- Actions -->
+          <div class="flex items-center gap-2">
+            <button id="saveBtn" class="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 color-transition">
+              <i data-feather="heart" class="w-4 h-4 inline mr-1"></i>Save
+            </button>
+            <button id="exportBtn" class="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 color-transition">
+              <i data-feather="download" class="w-4 h-4 inline mr-1"></i>Export
+            </button>
+            <button id="shareBtn" class="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 color-transition">
+              <i data-feather="share-2" class="w-4 h-4 inline mr-1"></i>Share
+            </button>
+          </div>
         </div>
       </div>
     </div>
-    <!-- Right Column (Links) -->
-      <div class="px-10 py-10 text-base text-black flex flex-col bg-gray-100 rounded-r-xl">
-        <span class="hover:text-blue-600 cursor-pointer font-medium">List of colors</span>
-        <span class="hover:text-blue-600 cursor-pointer font-medium">Browse Gradients</span>
-        <span class="hover:text-blue-600 cursor-pointer font-medium">Create a Gradient</span>
-        <span class="hover:text-blue-600 cursor-pointer font-medium">Make a Gradient Palette</span>
-        <span class="hover:text-blue-600 cursor-pointer font-medium">Color Picker</span>
-        <span class="hover:text-blue-600 cursor-pointer font-medium">Collage Maker</span>
-        <span class="hover:text-blue-600 cursor-pointer font-medium">List of Fonts</span>
-        <span class="hover:text-blue-600 cursor-pointer font-medium">Image Converter</span>
+  </header>
+
+  <!-- Main Content -->
+  <main class=" ">
+    
+    
+
+    <!-- Color Palette Display -->
+    <div class="bg-white  shadow-sm border border-gray-200 ">
+      <div id="colorPalette" class="flex h-[76vh] relative">
+        <!-- Colors will be dynamically generated here -->
       </div>
-  </div>
     </div>
 
-      <button class="text-pink-500 text-bse font-medium hover:text-pink-600 transition-colors">Go Pro</button>
-      <button class="text-gray-600 text-base hover:text-gray-800 transition-colors">Sign in</button>
-      <button class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors">Sign up</button>
-    </div>
-  </div>
-
-  <!-- Toolbar with icons -->
-  <div class="flex justify-between items-center gap-6 px-5 py-4 text-black">
-    <div class="flex items-center gap-4">
-      <span class="text-gray-500 text-lg ">Press the spacebar to generate color palettes!</span>
-      <div id="paletteInfo" class="text-sm text-gray-400 ml-2"></div>
-    </div>
-    <!-- Right-side -->
-    <div class="flex items-center gap-5">
-      <i data-feather="camera" class="w-4 h-4 cursor-pointer hover:text-gray-600 transition-colors"></i>
-      <i data-feather="grid" class="w-4 h-4 cursor-pointer hover:text-gray-600 transition-colors"></i>
-      <i data-feather="link" class="w-4 h-4 cursor-pointer hover:text-gray-600 transition-colors"></i>
-      <div class="h-5 w-px bg-gray-300 mx-1"></div>
-
-      <div class="flex gap-5 ">
-        <i data-feather="minus-circle" id="decreaseColors" class="w-4 h-4 text-black cursor-pointer hover:text-gray-600 transition-colors"></i>
-        <i data-feather="plus-circle" id="increaseColors"   class="w-4 h-4 text-black cursor-pointer hover:text-gray-600 transition-colors"></i>
+    <!-- Palette Analytics -->
+    <div id="paletteAnalytics" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Palette Analysis</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="text-center">
+          <div class="text-2xl font-bold text-blue-600" id="contrastScore">-</div>
+          <div class="text-sm text-gray-600 mt-1">Avg Contrast Ratio</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-green-600" id="accessibilityScore">-</div>
+          <div class="text-sm text-gray-600 mt-1">WCAG AA Compliance</div>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-bold text-purple-600" id="harmonyScore">-</div>
+          <div class="text-sm text-gray-600 mt-1">Color Harmony</div>
+        </div>
       </div>
-     <div class="h-5 w-px bg-gray-300 mx-1"></div>
+    </div>
+  </main>
 
-      <i data-feather="corner-up-left" id="back" class="w-4 h-4 text-gray-400 cursor-pointer"></i>
-      <i data-feather="corner-up-right" id="forward" class="w-4 h-4 text-gray-400 cursor-pointer"></i>
-      <div class="h-5 w-px bg-gray-300 mx-1"></div>
+  <!-- Notifications -->
+  <div id="notifications" class="fixed top-4 right-4 space-y-2 z-50">
+    <!-- Notifications will be dynamically added here -->
+  </div>
 
-      <span class="text-base cursor-pointer hover:text-gray-600 transition-colors">View</span>
-      <span class="text-base cursor-pointer hover:text-gray-600 transition-colors">Export</span>
-      <span class="text-base cursor-pointer hover:text-gray-600 transition-colors">Save</span>
+  <!-- Export Modal -->
+  <div id="exportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-gray-900">Export Palette</h3>
+        <button id="closeExportModal" class="text-gray-400 hover:text-gray-600">
+          <i data-feather="x" class="w-6 h-6"></i>
+        </button>
+      </div>
+      
+      <div class="space-y-3">
+        <button class="export-option w-full text-left p-3 rounded-lg border hover:bg-gray-50 color-transition" data-format="css">
+          <div class="font-medium">CSS Variables</div>
+          <div class="text-sm text-gray-500">:root CSS custom properties</div>
+        </button>
+        <button class="export-option w-full text-left p-3 rounded-lg border hover:bg-gray-50 color-transition" data-format="json">
+          <div class="font-medium">JSON</div>
+          <div class="text-sm text-gray-500">Structured data format</div>
+        </button>
+        <button class="export-option w-full text-left p-3 rounded-lg border hover:bg-gray-50 color-transition" data-format="adobe">
+          <div class="font-medium">Adobe ASE</div>
+          <div class="text-sm text-gray-500">Adobe Swatch Exchange</div>
+        </button>
+        <button class="export-option w-full text-left p-3 rounded-lg border hover:bg-gray-50 color-transition" data-format="url">
+          <div class="font-medium">Shareable URL</div>
+          <div class="text-sm text-gray-500">Copy direct link to palette</div>
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- Color Palette Section -->
-  <div id="colorPalette" class="flex h-[82vh]">
-    <!-- Colors will be dynamically generated here -->
-  </div>
+<script src="script.js">
+</script>
 
-  <!-- Copy notification -->
-  <div id="copyNotification" class="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg transform invisible  transition-transform duration-300">
-    Color copied to clipboard!
-  </div>
-
-  <script>
-    feather.replace(); // Activate Feather icons
-  </script>
-  <script src="script.js"></script>
 </body>
 </html>
