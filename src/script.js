@@ -1,5 +1,5 @@
 // =============================================================================
-// COLOR PALETTE GENERATOR - OPTIMIZED FOR UI/UX DESIGN
+// COLOR PALETTE GENERATOR - OPTIMIZED FOR UI/UX DESIGN WITH AUTHENTICATION
 // =============================================================================
 
 class ColorPaletteGenerator {
@@ -18,12 +18,14 @@ class ColorPaletteGenerator {
       historyIndex: parseInt(localStorage.getItem('paletteIndex')) || -1,
       colorCount: 5,
       paletteType: 'ui-design',
-      isGenerating: false
+      isGenerating: false,
+      currentUser: JSON.parse(localStorage.getItem('currentUser')) || null
     };
 
     this.bindEvents();
     this.initializeFeatherIcons();
     this.loadInitialPalette();
+    this.checkAuthState();
   }
 
   bindEvents() {
@@ -33,14 +35,42 @@ class ColorPaletteGenerator {
     document.getElementById('decreaseColors').addEventListener('click', () => this.adjustColorCount(-1));
     document.getElementById('increaseColors').addEventListener('click', () => this.adjustColorCount(1));
     
+    // Auth buttons
+    document.getElementById('signUpBtn')?.addEventListener('click', () => this.openAuthModal());
+    document.getElementById('signInBtn')?.addEventListener('click', () => this.openAuthModal('signin'));
+    document.getElementById('closeAuthModal')?.addEventListener('click', () => this.closeAuthModal());
+    
+    // Profile menu
+    document.getElementById('profileIcon')?.addEventListener('mouseenter', () => {
+      document.getElementById('profileMenu').classList.remove('hidden');
+    });
+    document.getElementById('profileSection')?.addEventListener('mouseleave', () => {
+      document.getElementById('profileMenu').classList.add('hidden');
+    });
+    document.getElementById('signOutBtn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.signOut();
+    });
+    
+    // Auth modal navigation
+    document.getElementById('continueWithEmail')?.addEventListener('click', () => this.showSignUpForm());
+    document.getElementById('switchToSignIn')?.addEventListener('click', () => this.showSignInForm());
+    document.getElementById('switchToSignUp')?.addEventListener('click', () => this.showSignUpForm());
+    
+    // Password toggles
+    document.getElementById('toggleSignUpPassword')?.addEventListener('click', () => this.togglePassword('signUpPassword', 'toggleSignUpPassword'));
+    document.getElementById('toggleSignInPassword')?.addEventListener('click', () => this.togglePassword('signInPassword', 'toggleSignInPassword'));
+    
+    // Form submissions
+    document.getElementById('signUpForm')?.addEventListener('submit', (e) => this.handleSignUp(e));
+    document.getElementById('signInForm')?.addEventListener('submit', (e) => this.handleSignIn(e));
+    
     // Palette type selector
-    // Tools dropdown (original functionality)
     document.getElementById('toolsBtn').addEventListener('click', (e) => {
       e.stopPropagation();
       document.getElementById('toolsDropdown').classList.toggle('hidden');
     });
 
-    // Palette type selector
     document.getElementById('paletteTypeBtn').addEventListener('click', (e) => {
       e.stopPropagation();
       document.getElementById('paletteTypeDropdown').classList.toggle('hidden');
@@ -54,6 +84,13 @@ class ColorPaletteGenerator {
 
     // Export functionality
     document.getElementById('exportBtn').addEventListener('click', () => this.showExportModal());
+    // Add these in the bindEvents() method
+document.getElementById('shareBtn')?.addEventListener('click', () => this.showShareModal());
+document.getElementById('closeShareModal')?.addEventListener('click', () => this.hideShareModal());
+document.getElementById('shareNative')?.addEventListener('click', () => this.shareCurrentPalette());
+document.getElementById('shareCopyLink')?.addEventListener('click', () => this.shareCopyLink());
+document.getElementById('shareCopyColors')?.addEventListener('click', () => this.shareCopyColors());
+document.getElementById('shareTwitter')?.addEventListener('click', () => this.shareToTwitter());
     document.getElementById('closeExportModal').addEventListener('click', () => this.hideExportModal());
     
     document.querySelectorAll('.export-option').forEach(option => {
@@ -73,15 +110,22 @@ class ColorPaletteGenerator {
       if (!e.target.closest('#paletteTypeBtn')) {
         document.getElementById('paletteTypeDropdown').classList.add('hidden');
       }
+      // Close auth modal on backdrop click
+      if (e.target.id === 'authModal') {
+        this.closeAuthModal();
+      }
     });
 
-    // Close dropdowns on ESC
+    // Close modals on ESC
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         document.getElementById('toolsDropdown').classList.add('hidden');
         document.getElementById('paletteTypeDropdown').classList.add('hidden');
+        this.closeAuthModal();
       }
     });
+
+    
   }
 
   initializeFeatherIcons() {
@@ -100,14 +144,336 @@ class ColorPaletteGenerator {
   }
 
   // =============================================================================
+  // AUTHENTICATION
+  // =============================================================================
+
+  checkAuthState() {
+    if (this.state.currentUser) {
+      this.showProfileSection();
+    } else {
+      this.showAuthButtons();
+    }
+  }
+
+  showProfileSection() {
+    document.getElementById('signUpBtn').style.display = 'none';
+    document.getElementById('signInBtn').style.display = 'none';
+    document.getElementById('profileSection').classList.remove('hidden');
+    
+    // Set profile initial
+    const initial = this.state.currentUser.name.charAt(0).toUpperCase();
+    document.querySelector('#profileIcon span').textContent = initial;
+  }
+
+  showAuthButtons() {
+    document.getElementById('signUpBtn').style.display = 'block';
+    document.getElementById('signInBtn').style.display = 'block';
+    document.getElementById('profileSection').classList.add('hidden');
+  }
+
+  openAuthModal(view = 'initial') {
+    const modal = document.getElementById('authModal');
+    const content = document.getElementById('authModalContent');
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    
+    // Trigger animation
+    setTimeout(() => {
+      content.style.transform = 'scale(1)';
+      content.style.opacity = '1';
+    }, 10);
+    
+    if (view === 'signin') {
+      this.showSignInForm();
+    } else {
+      this.showInitialView();
+    }
+    
+    this.initializeFeatherIcons();
+  }
+
+  closeAuthModal() {
+    const modal = document.getElementById('authModal');
+    const content = document.getElementById('authModalContent');
+    
+    content.style.transform = 'scale(0.95)';
+    content.style.opacity = '0';
+    
+    setTimeout(() => {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      this.showInitialView();
+      this.resetForms();
+    }, 300);
+  }
+
+  showInitialView() {
+    document.getElementById('authInitial').classList.remove('hidden');
+    document.getElementById('authSignUp').classList.add('hidden');
+    document.getElementById('authSignIn').classList.add('hidden');
+  }
+
+  showSignUpForm() {
+    document.getElementById('authInitial').classList.add('hidden');
+    document.getElementById('authSignUp').classList.remove('hidden');
+    document.getElementById('authSignIn').classList.add('hidden');
+    this.initializeFeatherIcons();
+  }
+
+  showSignInForm() {
+    document.getElementById('authInitial').classList.add('hidden');
+    document.getElementById('authSignUp').classList.add('hidden');
+    document.getElementById('authSignIn').classList.remove('hidden');
+    this.initializeFeatherIcons();
+  }
+
+  togglePassword(inputId, buttonId) {
+    const input = document.getElementById(inputId);
+    const button = document.getElementById(buttonId);
+    
+    if (input.type === 'password') {
+      input.type = 'text';
+      button.innerHTML = '<i data-feather="eye-off" class="w-5 h-5"></i>';
+    } else {
+      input.type = 'password';
+      button.innerHTML = '<i data-feather="eye" class="w-5 h-5"></i>';
+    }
+    
+    this.initializeFeatherIcons();
+  }
+
+  validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  }
+
+  validateSignUpForm() {
+    let isValid = true;
+    
+    // Name validation
+    const name = document.getElementById('signUpName').value.trim();
+    const nameError = document.getElementById('nameError');
+    if (name.length < 2) {
+      nameError.classList.remove('hidden');
+      isValid = false;
+    } else {
+      nameError.classList.add('hidden');
+    }
+    
+    // Email validation
+    const email = document.getElementById('signUpEmail').value.trim();
+    const emailError = document.getElementById('emailError');
+    if (!this.validateEmail(email)) {
+      emailError.classList.remove('hidden');
+      isValid = false;
+    } else {
+      emailError.classList.add('hidden');
+    }
+    
+    // Password validation
+    const password = document.getElementById('signUpPassword').value;
+    const passwordError = document.getElementById('passwordError');
+    if (password.length < 6) {
+      passwordError.classList.remove('hidden');
+      isValid = false;
+    } else {
+      passwordError.classList.add('hidden');
+    }
+    
+    // Address validation
+    const address = document.getElementById('signUpAddress').value.trim();
+    const addressError = document.getElementById('addressError');
+    if (address.length === 0) {
+      addressError.classList.remove('hidden');
+      isValid = false;
+    } else {
+      addressError.classList.add('hidden');
+    }
+    
+    return isValid;
+  }
+
+  validateSignInForm() {
+    let isValid = true;
+    
+    // Email validation
+    const email = document.getElementById('signInEmail').value.trim();
+    const emailError = document.getElementById('signInEmailError');
+    if (!this.validateEmail(email)) {
+      emailError.classList.remove('hidden');
+      isValid = false;
+    } else {
+      emailError.classList.add('hidden');
+    }
+    
+    // Password validation
+    const password = document.getElementById('signInPassword').value;
+    const passwordError = document.getElementById('signInPasswordError');
+    if (password.length < 6) {
+      passwordError.classList.remove('hidden');
+      isValid = false;
+    } else {
+      passwordError.classList.add('hidden');
+    }
+    
+    return isValid;
+  }
+
+  handleSignUp(e) {
+    e.preventDefault();
+    
+    if (!this.validateSignUpForm()) {
+      return;
+    }
+    
+    const userData = {
+      name: document.getElementById('signUpName').value.trim(),
+      email: document.getElementById('signUpEmail').value.trim(),
+      address: document.getElementById('signUpAddress').value.trim(),
+      createdAt: new Date().toISOString()
+    };
+    
+    // Save to localStorage (in production, this would be Firebase)
+    localStorage.setItem('currentUser', JSON.stringify(userData));
+    this.state.currentUser = userData;
+    
+    /* 
+    // FIREBASE AUTHENTICATION CODE (for backend integration)
+    import { getAuth, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+    import { getFirestore, doc, setDoc, serverTimestamp } from "firebase/firestore";
+    
+    const auth = getAuth();
+    const email = document.getElementById('signUpEmail').value.trim();
+    const password = document.getElementById('signUpPassword').value;
+    const name = document.getElementById('signUpName').value.trim();
+    
+    createUserWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        return updateProfile(user, { displayName: name });
+      })
+      .then(() => {
+        // Save additional user data to Firestore
+        const db = getFirestore();
+        const user = auth.currentUser;
+        return setDoc(doc(db, "users", user.uid), {
+          name: name,
+          email: email,
+          address: document.getElementById('signUpAddress').value.trim(),
+          createdAt: serverTimestamp()
+        });
+      })
+      .then(() => {
+        this.showNotification('Account created successfully!', 'success');
+        this.closeAuthModal();
+        this.showProfileSection();
+      })
+      .catch((error) => {
+        console.error("Sign up error:", error);
+        this.showNotification(error.message, 'error');
+      });
+    */
+    
+    this.showNotification('Account created successfully!', 'success');
+    this.closeAuthModal();
+    this.showProfileSection();
+  }
+
+  handleSignIn(e) {
+    e.preventDefault();
+    
+    if (!this.validateSignInForm()) {
+      return;
+    }
+    
+    const email = document.getElementById('signInEmail').value.trim();
+    
+    // Check if user exists in localStorage
+    const storedUser = JSON.parse(localStorage.getItem('currentUser'));
+    
+    if (storedUser && storedUser.email === email) {
+      this.state.currentUser = storedUser;
+      
+      /* 
+      // FIREBASE AUTHENTICATION CODE (for backend integration)
+      import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+      import { getFirestore, doc, getDoc } from "firebase/firestore";
+      
+      const auth = getAuth();
+      const email = document.getElementById('signInEmail').value.trim();
+      const password = document.getElementById('signInPassword').value;
+      
+      signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+          const user = userCredential.user;
+          // Fetch user data from Firestore
+          const db = getFirestore();
+          return getDoc(doc(db, "users", user.uid));
+        })
+        .then((docSnap) => {
+          if (docSnap.exists()) {
+            this.state.currentUser = docSnap.data();
+            localStorage.setItem('currentUser', JSON.stringify(this.state.currentUser));
+          }
+          this.showNotification('Signed in successfully!', 'success');
+          this.closeAuthModal();
+          this.showProfileSection();
+        })
+        .catch((error) => {
+          console.error("Sign in error:", error);
+          this.showNotification(error.message, 'error');
+        });
+      */
+      
+      this.showNotification('Signed in successfully!', 'success');
+      this.closeAuthModal();
+      this.showProfileSection();
+    } else {
+      this.showNotification('Invalid credentials. Please sign up first.', 'error');
+    }
+  }
+
+  signOut() {
+    /* 
+    // FIREBASE SIGN OUT CODE
+    import { getAuth, signOut } from "firebase/auth";
+    
+    const auth = getAuth();
+    signOut(auth).then(() => {
+      this.state.currentUser = null;
+      localStorage.removeItem('currentUser');
+      this.showAuthButtons();
+      this.showNotification('Signed out successfully', 'success');
+    }).catch((error) => {
+      console.error("Sign out error:", error);
+    });
+    */
+    
+    this.state.currentUser = null;
+    localStorage.removeItem('currentUser');
+    this.showAuthButtons();
+    this.showNotification('Signed out successfully', 'success');
+  }
+
+  resetForms() {
+    document.getElementById('signUpForm')?.reset();
+    document.getElementById('signInForm')?.reset();
+    
+    // Hide all error messages
+    document.querySelectorAll('.text-red-500').forEach(error => {
+      error.classList.add('hidden');
+    });
+  }
+
+  // =============================================================================
   // CORE COLOR THEORY & ALGORITHMS
   // =============================================================================
 
-  // Enhanced color conversion with better precision
   hslToHex(h, s, l) {
-    h = ((h % 360) + 360) % 360; // Normalize hue
-    s = Math.max(0, Math.min(100, s)) / 100; // Clamp saturation
-    l = Math.max(0, Math.min(100, l)) / 100; // Clamp lightness
+    h = ((h % 360) + 360) % 360;
+    s = Math.max(0, Math.min(100, s)) / 100;
+    l = Math.max(0, Math.min(100, l)) / 100;
 
     const k = n => (n + h / 30) % 12;
     const a = s * Math.min(l, 1 - l);
@@ -149,7 +515,6 @@ class ColorPaletteGenerator {
     return [Math.round(h * 360), Math.round(s * 100), Math.round(l * 100)];
   }
 
-  // Calculate color contrast ratio (WCAG standards)
   getContrastRatio(color1, color2) {
     const getLuminance = (hex) => {
       const rgb = [1, 3, 5].map(i => {
@@ -167,7 +532,6 @@ class ColorPaletteGenerator {
     return (brightest + 0.05) / (darkest + 0.05);
   }
 
-  // Get optimal text color for background
   getOptimalTextColor(backgroundColor, options = {}) {
     const { forceWhite, forceBlack, threshold = 4.5 } = options;
     
@@ -177,7 +541,6 @@ class ColorPaletteGenerator {
     const whiteContrast = this.getContrastRatio(backgroundColor, '#ffffff');
     const blackContrast = this.getContrastRatio(backgroundColor, '#000000');
 
-    // Return color that meets WCAG AA threshold, prefer higher contrast
     if (whiteContrast >= threshold && blackContrast >= threshold) {
       return whiteContrast > blackContrast ? '#ffffff' : '#000000';
     } else if (whiteContrast >= threshold) {
@@ -185,7 +548,6 @@ class ColorPaletteGenerator {
     } else if (blackContrast >= threshold) {
       return '#000000';
     } else {
-      // Fallback: choose higher contrast even if below threshold
       return whiteContrast > blackContrast ? '#ffffff' : '#000000';
     }
   }
@@ -201,8 +563,8 @@ class ColorPaletteGenerator {
 
     switch (harmony) {
       case 'complementary':
-        colors.push(this.hslToHex(baseHue, this.random(60, 80), this.random(45, 65))); // Primary
-        colors.push(this.hslToHex((baseHue + 180) % 360, this.random(50, 70), this.random(50, 70))); // Complement
+        colors.push(this.hslToHex(baseHue, this.random(60, 80), this.random(45, 65)));
+        colors.push(this.hslToHex((baseHue + 180) % 360, this.random(50, 70), this.random(50, 70)));
         break;
         
       case 'triadic':
@@ -220,13 +582,12 @@ class ColorPaletteGenerator {
         break;
         
       case 'split-complementary':
-        colors.push(this.hslToHex(baseHue, this.random(60, 80), this.random(45, 65))); // Base
+        colors.push(this.hslToHex(baseHue, this.random(60, 80), this.random(45, 65)));
         colors.push(this.hslToHex((baseHue + 150) % 360, this.random(50, 70), this.random(50, 70)));
         colors.push(this.hslToHex((baseHue + 210) % 360, this.random(50, 70), this.random(50, 70)));
         break;
     }
 
-    // Fill remaining colors with variations
     while (colors.length < count) {
       const baseColor = colors[Math.floor(Math.random() * colors.length)];
       const [h, s, l] = this.hexToHsl(baseColor);
@@ -248,18 +609,14 @@ class ColorPaletteGenerator {
   generateBrandIdentityPalette(baseHue, count) {
     const colors = [];
     
-    // Primary brand color (more saturated and confident)
     colors.push(this.hslToHex(baseHue, this.random(70, 90), this.random(45, 55)));
     
-    // Secondary color (complementary or near-complementary)
     const secondaryHue = (baseHue + this.random(150, 210)) % 360;
     colors.push(this.hslToHex(secondaryHue, this.random(60, 80), this.random(50, 60)));
     
-    // Neutral colors for balance
-    colors.push(this.hslToHex(baseHue, this.random(10, 30), this.random(20, 30))); // Dark
-    colors.push(this.hslToHex(baseHue, this.random(5, 15), this.random(85, 95))); // Light
+    colors.push(this.hslToHex(baseHue, this.random(10, 30), this.random(20, 30)));
+    colors.push(this.hslToHex(baseHue, this.random(5, 15), this.random(85, 95)));
     
-    // Accent color
     if (count > 4) {
       const accentHue = (baseHue + this.random(60, 120)) % 360;
       colors.push(this.hslToHex(accentHue, this.random(80, 95), this.random(55, 65)));
@@ -279,7 +636,6 @@ class ColorPaletteGenerator {
     const temperature = Math.random() > 0.5 ? 'warm' : 'cool';
     
     if (temperature === 'warm') {
-      // Warm palette (reds, oranges, yellows)
       for (let i = 0; i < count; i++) {
         const hue = (baseHue + this.random(-60, 60)) % 360;
         const adjustedHue = hue < 30 || hue > 300 ? hue : 
@@ -287,7 +643,6 @@ class ColorPaletteGenerator {
         colors.push(this.hslToHex(adjustedHue, this.random(60, 95), this.random(35, 75)));
       }
     } else {
-      // Cool palette (blues, greens, purples)
       for (let i = 0; i < count; i++) {
         const hue = (baseHue + this.random(-45, 45)) % 360;
         const adjustedHue = (hue > 60 && hue < 300) ? hue : hue + 180;
@@ -307,20 +662,18 @@ class ColorPaletteGenerator {
   generateAccessibilityPalette(baseHue, count) {
     const colors = [];
     
-    // High contrast pairs that meet WCAG AAA standards
     const darkColors = [
-      this.hslToHex(baseHue, 80, 20), // Very dark primary
-      this.hslToHex((baseHue + 60) % 360, 75, 25), // Dark secondary
-      this.hslToHex((baseHue + 180) % 360, 70, 22), // Dark complement
+      this.hslToHex(baseHue, 80, 20),
+      this.hslToHex((baseHue + 60) % 360, 75, 25),
+      this.hslToHex((baseHue + 180) % 360, 70, 22),
     ];
     
     const lightColors = [
-      this.hslToHex(baseHue, 60, 85), // Light primary
-      this.hslToHex((baseHue + 60) % 360, 55, 90), // Light secondary
-      this.hslToHex((baseHue + 180) % 360, 50, 88), // Light complement
+      this.hslToHex(baseHue, 60, 85),
+      this.hslToHex((baseHue + 60) % 360, 55, 90),
+      this.hslToHex((baseHue + 180) % 360, 50, 88),
     ];
 
-    // Ensure we have high contrast pairs
     for (let i = 0; i < Math.ceil(count / 2); i++) {
       if (i < darkColors.length) colors.push(darkColors[i]);
       if (colors.length < count && i < lightColors.length) colors.push(lightColors[i]);
@@ -364,7 +717,6 @@ class ColorPaletteGenerator {
         palette = this.generateUIDesignPalette(baseHue, this.state.colorCount);
     }
 
-    // Add to history
     this.addToHistory(palette);
     this.renderPalette(palette);
     this.updateUI();
@@ -395,13 +747,11 @@ class ColorPaletteGenerator {
 
   createColorBox(color, index, totalColors) {
     const textColor = this.getOptimalTextColor(color);
-    const [h, s, l] = this.hexToHsl(color);
     
     const box = document.createElement('div');
     box.className = 'flex-1 relative group cursor-pointer color-transition h-[76vh] flex flex-col justify-center items-center p-6';
     box.style.backgroundColor = color;
     
-    // Responsive text sizing based on color count
     let hexSize = 'text-2xl md:text-3xl lg:text-4xl';
     let detailSize = 'text-sm';
     let spacing = 'space-y-4';
@@ -422,8 +772,6 @@ class ColorPaletteGenerator {
           <h3 class="${hexSize} font-bold tracking-tight" style="color: ${textColor}">
             ${color.toUpperCase()}
           </h3>
-          <div class="${detailSize} space-y-1" style="color: ${textColor}">
-          </div>
         </div>
         
         <div class="flex justify-center gap-2 mt-4">
@@ -434,7 +782,6 @@ class ColorPaletteGenerator {
         </div>
       </div>
       
-      <!-- Always visible color info -->
       <div class="absolute bottom-4 left-4 right-4">
         <div class="text-center">
           <div class="${hexSize} font-bold" style="color: ${textColor}">
@@ -447,7 +794,6 @@ class ColorPaletteGenerator {
       </div>
     `;
 
-    // Add event listeners
     box.addEventListener('click', (e) => {
       if (!e.target.closest('.copy-btn') && !e.target.closest('.lock-btn')) {
         this.copyToClipboard(color);
@@ -459,11 +805,6 @@ class ColorPaletteGenerator {
       this.copyToClipboard(color);
     });
 
-    box.querySelector('.lock-btn')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.toggleColorLock(index);
-    });
-
     return box;
   }
 
@@ -473,7 +814,6 @@ class ColorPaletteGenerator {
   }
 
   analyzePalette(palette) {
-    // Calculate average contrast ratio
     let totalContrast = 0;
     let contrastPairs = 0;
     let accessiblePairs = 0;
@@ -496,11 +836,9 @@ class ColorPaletteGenerator {
   }
 
   getHarmonyScore(palette) {
-    // Simple harmony scoring based on hue relationships
     const hues = palette.colors.map(color => this.hexToHsl(color)[0]);
-    let harmonyScore = 85; // Base score
+    let harmonyScore = 85;
 
-    // Check for harmonic relationships
     const relationships = [];
     for (let i = 0; i < hues.length; i++) {
       for (let j = i + 1; j < hues.length; j++) {
@@ -510,7 +848,6 @@ class ColorPaletteGenerator {
       }
     }
 
-    // Bonus for harmonic intervals (triadic, complementary, etc.)
     relationships.forEach(rel => {
       if (Math.abs(rel - 60) < 15 || Math.abs(rel - 120) < 15 || Math.abs(rel - 180) < 15) {
         harmonyScore += 5;
@@ -567,6 +904,51 @@ class ColorPaletteGenerator {
     });
   }
 
+  // Add this new method after the copyToClipboard method
+
+async shareCurrentPalette() {
+  if (!this.state.currentPalette) {
+    this.showNotification('No palette to share!', 'error');
+    return;
+  }
+
+  const palette = this.state.currentPalette;
+  const colors = palette.colors.join(', ');
+  const shareData = {
+    title: `${palette.name} - Color Palette`,
+    text: `Check out this amazing ${palette.name} color palette!\n\nColors: ${colors}\n\nGenerated with ColorScope`,
+    url: this.generateURLExport(palette)
+  };
+
+  // Check if Web Share API is supported
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData);
+      this.showNotification('Palette shared successfully!', 'success');
+    } catch (error) {
+      // User cancelled or error occurred
+      if (error.name !== 'AbortError') {
+        console.error('Error sharing:', error);
+        this.fallbackShare(palette);
+      }
+    }
+  } else {
+    // Fallback for browsers that don't support Web Share API
+    this.fallbackShare(palette);
+  }
+}
+
+fallbackShare(palette) {
+  const colors = palette.colors.join(', ');
+  const shareText = `${palette.name}\n\nColors: ${colors}\n\n${this.generateURLExport(palette)}`;
+  
+  navigator.clipboard.writeText(shareText).then(() => {
+    this.showNotification('Share link copied to clipboard!', 'success');
+  }).catch(() => {
+    this.showNotification('Failed to copy share link', 'error');
+  });
+}
+
   adjustColorCount(delta) {
     const newCount = Math.max(3, Math.min(8, this.state.colorCount + delta));
     if (newCount !== this.state.colorCount) {
@@ -595,24 +977,15 @@ class ColorPaletteGenerator {
     }
   }
 
-  toggleColorLock(index) {
-    // TODO: Implement color locking functionality
-    this.showNotification('Color locking coming soon!', 'info');
-  }
-
   // =============================================================================
   // HISTORY MANAGEMENT
   // =============================================================================
 
   addToHistory(palette) {
-    // Remove future history if we're not at the end
     this.state.history = this.state.history.slice(0, this.state.historyIndex + 1);
-    
-    // Add new palette
     this.state.history.push(palette);
     this.state.historyIndex = this.state.history.length - 1;
     
-    // Limit history size
     if (this.state.history.length > 50) {
       this.state.history.shift();
       this.state.historyIndex--;
@@ -720,7 +1093,6 @@ class ColorPaletteGenerator {
   }
 
   generateAdobeExport(palette) {
-    // Simplified ASE-like format (would need binary encoding for real ASE)
     const content = palette.colors.map((color, index) => {
       const [r, g, b] = [1, 3, 5].map(i => parseInt(color.slice(i, i + 2), 16));
       return `Color ${index + 1}: RGB(${r}, ${g}, ${b}) | HEX: ${color}`;
@@ -748,7 +1120,52 @@ class ColorPaletteGenerator {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
+  // Add these methods in the EXPORT FUNCTIONALITY section
 
+showShareModal() {
+  document.getElementById('shareModal').classList.remove('hidden');
+  document.getElementById('shareModal').classList.add('flex');
+  this.initializeFeatherIcons();
+}
+
+hideShareModal() {
+  document.getElementById('shareModal').classList.add('hidden');
+  document.getElementById('shareModal').classList.remove('flex');
+}
+
+shareToTwitter() {
+  if (!this.state.currentPalette) return;
+  
+  const palette = this.state.currentPalette;
+  const colors = palette.colors.join(' ');
+  const url = this.generateURLExport(palette);
+  const text = `Check out this ${palette.name} color palette! ${colors}`;
+  
+  window.open(
+    `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
+    '_blank'
+  );
+}
+
+shareCopyColors() {
+  if (!this.state.currentPalette) return;
+  
+  const colors = this.state.currentPalette.colors.join('\n');
+  navigator.clipboard.writeText(colors).then(() => {
+    this.showNotification('All colors copied to clipboard!', 'success');
+    this.hideShareModal();
+  });
+}
+
+shareCopyLink() {
+  if (!this.state.currentPalette) return;
+  
+  const url = this.generateURLExport(this.state.currentPalette);
+  navigator.clipboard.writeText(url).then(() => {
+    this.showNotification('Share link copied to clipboard!', 'success');
+    this.hideShareModal();
+  });
+}
   // =============================================================================
   // UI UPDATES & NOTIFICATIONS
   // =============================================================================
@@ -790,7 +1207,6 @@ class ColorPaletteGenerator {
     
     document.getElementById('notifications').appendChild(notification);
     
-    // Re-initialize Feather icons for the notification
     if (typeof feather !== 'undefined') {
       feather.replace();
     }
@@ -832,7 +1248,6 @@ class ColorPaletteGenerator {
 document.addEventListener('DOMContentLoaded', () => {
   window.colorPaletteGenerator = new ColorPaletteGenerator();
   
-  // Initialize Feather icons after DOM content is loaded
   if (typeof feather !== 'undefined') {
     feather.replace();
   }

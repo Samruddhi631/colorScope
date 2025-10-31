@@ -61,13 +61,21 @@
     ::-webkit-scrollbar-thumb:hover {
       background: #a1a1a1;
     }
+
+    /* Auth modal animations */
+    
+    #authModalContent {
+      transform: scale(0.95);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
   </style>
 </head>
 <body class="font-sans bg-gray-50 relative min-h-screen">
 
   <!-- Header Navigation -->
   <header class="bg-white">
-    <nav class="flex justify-between shadow items-center px-6 py-4   shadow ">
+    <nav class="flex justify-between shadow items-center px-6 py-4 shadow">
       <!-- Logo -->
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 gradient-bg rounded-lg flex items-center justify-center shadow-lg">
@@ -83,7 +91,7 @@
       <div class="flex items-center gap-6">
         <!-- Tools Dropdown -->
         <div class="relative">
-          <button id="toolsBtn" class="text-pink-600 text-base font-medium flex hover:text-blue-600 transition-colors">
+          <button id="toolsBtn" class="text-black text-base font-medium flex hover:text-blue-600 transition-colors">
             Tools <i data-feather="chevron-down" class="w-4 h-4 mt-1.5"></i>
           </button>
 
@@ -94,9 +102,9 @@
             <div class="flex flex-col m-4">
               <!-- Left Column -->
                 <a href="/src/index.html" class="group block rounded-xl hover:bg-green-100 cursor-pointer p-3 gap-4 flex">
-                <img src="assets/menu_icon_generate.svg" class="w-14 h-14" alt="">
+                <img src="/assets/menu_icon_generate.svg" class="w-14 h-14" alt="">
                 <div class="flex flex-col">
-                    <h2 class="font-bold text-2xl text-gray-800 group-hover:text-blue-800">Palette Generator</h2>
+                    <h2 class="font-bold text-2xl text-gray-800 group-hover:text-green-800">Palette Generator</h2>
                     <p class="text-gray-500 text-sm font-semibold">Create your palettes in seconds</p>
                     </div>
                   </a>
@@ -109,7 +117,7 @@
               </a>
 
               <a href="/src/imagePicker.html" class="group block rounded-xl hover:bg-blue-100 cursor-pointer p-3 gap-4 flex">
-                <img src="assets/menu_icon_image_picker.svg" class="w-14 h-14" alt="" />
+                <img src="/assets/menu_icon_image_picker.svg" class="w-14 h-14" alt="" />
                 <div class="flex flex-col">
                 <h2 class="font-bold text-2xl text-gray-800 group-hover:text-blue-800">Image Picker</h2>
                 <p class="text-gray-500 text-sm font-semibold">Get beautiful palettes from your photos</p>
@@ -117,7 +125,7 @@
               </a>
 
               <a href="/src/contrastChecker.html" class="group block rounded-xl hover:bg-yellow-100 cursor-pointer p-3 gap-4 flex">
-                <img src="assets/menu_icon_contrast_checker.svg" class="w-14 h-14" alt="">
+                <img src="/assets/menu_icon_contrast_checker.svg" class="w-14 h-14" alt="">
                 <div class="flex flex-col">
                     <h2 class="font-bold text-2xl text-gray-800 group-hover:text-yellow-800">Contrast Checker</h2>
                     <p class="text-gray-500 text-sm font-semibold">Check the contrast between two colors</p>
@@ -125,7 +133,7 @@
               </a>
               
                 <a href="/src/gradientGenerator.html" class="group block rounded-xl hover:bg-purple-100 cursor-pointer p-3 gap-4 flex">
-                <img src="assets/menu_icon_visualizer.svg" class="w-14 h-14" alt="">
+                <img src="/assets/menu_icon_visualizer.svg" class="w-14 h-14" alt="">
                 <div class="flex flex-col">
                     <h2 class="font-bold text-2xl text-gray-800 group-hover:text-purple-800" >Gradient Generator</h2>
                     <p class="text-gray-500 text-sm font-semibold">Preview your colors on real designs</p>
@@ -145,7 +153,7 @@
               </div>
           </div>
         </div>
-        <div class="h-8 w-px bg-gray-300 mx-1"></div>
+        
         <div class="relative">
           <button id="paletteTypeBtn" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 color-transition">
             <span id="currentPaletteType">UI Design</span>
@@ -172,25 +180,49 @@
             </div>
           </div>
         </div>
-        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 
-        color-transition shadow-sm">Generate</button>
+        <div class="h-8 w-px bg-gray-300 mx-1"></div>
+        <button class="text-pink-500 text-base font-medium hover:text-pink-600 transition-colors">
+          Go Pro
+        </button>
+        <button id="signInBtn" class="text-black text-base hover:text-gray-500 transition-colors">
+          Sign in
+        </button>
+        <button id="signUpBtn" class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors">
+          Sign up
+        </button>
+        
+        <!-- Profile Icon (hidden by default) -->
+        <div id="profileSection" class="relative hidden">
+          <div id="profileIcon" class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors">
+            <span class="text-white font-semibold text-lg">S</span>
+          </div>
+          
+          <!-- Profile Dropdown Menu -->
+          <div id="profileMenu" class="hidden absolute right-0 mt-2 w-40 bg-white bg-opacity-95 backdrop-blur-lg rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Dashboard</a>
+            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Account</a>
+            <hr class="my-1 border-gray-200">
+            <a href="#" id="signOutBtn" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Sign out</a>
+          </div>
+        </div>
       </div>
     </nav>
+    
     <!-- Control Panel -->
-    <div class="bg-white  border border-gray-200 px-6 py-2">
+    <div class="bg-white border border-gray-200 px-6 py-2">
       <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         
         <!-- Left Side - Instructions -->
         <div class="flex items-center gap-6">
           <div>
-            <!-- <h2 class="text-lg font-semibold text-gray-900 mb-1">Generate Professional Color Palettes</h2> -->
             <p class="text-gray-600">Press <kbd class="px-2 py-1 bg-gray-100 rounded text-xs font-mono">Space</kbd> or click Generate for new palettes</p>
           </div>
           <div id="paletteInfo" class="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-lg font-medium"></div>
         </div>
         
         <!-- Right Side - Controls -->
-        <div class="flex items-center gap-4 ">
+        <div class="flex items-center gap-4">
           <!-- Color Count -->
           <div class="flex items-center gap-2">
             <span class="text-sm text-gray-600 font-medium">Colors:</span>
@@ -235,12 +267,9 @@
   </header>
 
   <!-- Main Content -->
-  <main class=" ">
-    
-    
-
+  <main>
     <!-- Color Palette Display -->
-    <div class="bg-white  shadow-sm border border-gray-200 ">
+    <div class="bg-white shadow-sm border border-gray-200">
       <div id="colorPalette" class="flex h-[76vh] relative">
         <!-- Colors will be dynamically generated here -->
       </div>
@@ -271,8 +300,157 @@
     <!-- Notifications will be dynamically added here -->
   </div>
 
+  <!-- Auth Modal -->
+<div id="authModal" class="fixed inset-0 bg-gray-800 bg-opacity-70 hidden items-center justify-center z-50">
+    <div class="bg-white bg-opacity-95 backdrop-blur-xl rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 relative" id="authModalContent">
+      
+      <!-- Close Button -->
+      <button id="closeAuthModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+        <i data-feather="x" class="w-6 h-6"></i>
+      </button>
+
+      <!-- Initial View -->
+      <div id="authInitial">
+        <h2 class="text-4xl font-bold text-gray-900 text-center mb-2">Hello!</h2>
+        <p class="text-gray-600 text-center mb-8">Use your email or another service to continue with Coolors.</p>
+        
+        <div class="space-y-3">
+          <button class="w-full flex items-center justify-center gap-3 px-6 py-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+            <span class="text-2xl font-bold">G</span>
+            <span class="font-medium">Continue with Google</span>
+          </button>
+          
+          <button class="w-full flex items-center justify-center gap-3 px-6 py-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+            <i data-feather="smartphone" class="w-5 h-5"></i>
+            <span class="font-medium">Continue with Apple</span>
+          </button>
+          
+          <button id="continueWithEmail" class="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+            Continue with email
+          </button>
+        </div>
+        
+        <p class="text-xs text-gray-500 text-center mt-6">
+          By continuing, you agree to our <a href="#" class="text-blue-600 hover:underline">Terms of Service</a>. Read our <a href="#" class="text-blue-600 hover:underline">Privacy Policy</a>.
+        </p>
+      </div>
+
+      <!-- Sign Up Form -->
+      <div id="authSignUp" class="hidden">
+        <h2 class="text-4xl font-bold text-gray-900 text-center mb-2">Sign up</h2>
+        <p class="text-gray-600 text-center mb-8">Create a free account with your email.</p>
+        
+        <form id="signUpForm" class="space-y-4">
+          <div>
+            <input 
+              type="text" 
+              id="signUpName" 
+              placeholder="Full Name" 
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            >
+            <p class="text-red-500 text-xs mt-1 hidden" id="nameError">Name must be at least 2 characters</p>
+          </div>
+          
+          <div>
+            <input 
+              type="email" 
+              id="signUpEmail" 
+              placeholder="Email" 
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            >
+            <p class="text-red-500 text-xs mt-1 hidden" id="emailError">Please enter a valid email address</p>
+          </div>
+          
+          <div class="relative">
+            <input 
+              type="password" 
+              id="signUpPassword" 
+              placeholder="Password" 
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            >
+            <button type="button" id="toggleSignUpPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <i data-feather="eye" class="w-5 h-5"></i>
+            </button>
+            <p class="text-red-500 text-xs mt-1 hidden" id="passwordError">Password must be at least 6 characters</p>
+          </div>
+          
+          <div>
+            <input 
+              type="text" 
+              id="signUpAddress" 
+              placeholder="Address" 
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            >
+            <p class="text-red-500 text-xs mt-1 hidden" id="addressError">Address is required</p>
+          </div>
+          
+          <button type="submit" class="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+            Create your free account
+          </button>
+        </form>
+        
+        <p class="text-xs text-gray-500 text-center mt-6">
+          By continuing, you agree to our <a href="#" class="text-blue-600 hover:underline">Terms of Service</a>. Read our <a href="#" class="text-blue-600 hover:underline">Privacy Policy</a>.
+        </p>
+        
+        <p class="text-center mt-6 text-sm">
+          Already have an account? <button id="switchToSignIn" class="text-blue-600 hover:underline font-medium">Sign in</button>
+        </p>
+      </div>
+
+      <!-- Sign In Form -->
+      <div id="authSignIn" class="hidden">
+        <h2 class="text-4xl font-bold text-gray-900 text-center mb-2">Sign in</h2>
+        <p class="text-gray-600 text-center mb-8">Sign in with your email here.</p>
+        
+        <form id="signInForm" class="space-y-4">
+          <div>
+            <input 
+              type="email" 
+              id="signInEmail" 
+              placeholder="Email" 
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            >
+            <p class="text-red-500 text-xs mt-1 hidden" id="signInEmailError">Please enter a valid email address</p>
+          </div>
+          
+          <div class="relative">
+            <input 
+              type="password" 
+              id="signInPassword" 
+              placeholder="Password" 
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            >
+            <button type="button" id="toggleSignInPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+              <i data-feather="eye" class="w-5 h-5"></i>
+            </button>
+            <p class="text-red-500 text-xs mt-1 hidden" id="signInPasswordError">Password must be at least 6 characters</p>
+          </div>
+          
+          <button type="submit" class="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+            Sign in
+          </button>
+        </form>
+        
+        <p class="text-xs text-gray-500 text-center mt-6">
+          By continuing, you agree to our <a href="#" class="text-blue-600 hover:underline">Terms of Service</a>. Read our <a href="#" class="text-blue-600 hover:underline">Privacy Policy</a>.
+        </p>
+        
+        <div class="text-center mt-6 space-y-2">
+          <p class="text-sm">
+            Forgot password? <button id="resetPassword" class="text-blue-600 hover:underline font-medium">Reset</button>
+          </p>
+          <p class="text-sm">
+            Don't have an account? <button id="switchToSignUp" class="text-blue-600 hover:underline font-medium">Sign up</button>
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Export Modal -->
-  <div id="exportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div id="exportModal" class="fixed inset-0 bg-gray-800 bg-opacity-70 hidden items-center justify-center z-50">
     <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
       <div class="flex justify-between items-center mb-4">
         <h3 class="text-lg font-semibold text-gray-900">Export Palette</h3>
@@ -301,9 +479,38 @@
       </div>
     </div>
   </div>
+  <!-- Share Modal (Optional - for more sharing options) -->
+<div id="shareModal" class="fixed inset-0 bg-gray-800 bg-opacity-70 hidden items-center justify-center z-50">
+  <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-lg font-semibold text-gray-900">Share Palette</h3>
+      <button id="closeShareModal" class="text-gray-400 hover:text-gray-600">
+        <i data-feather="x" class="w-6 h-6"></i>
+      </button>
+    </div>
+    
+    <div class="space-y-3">
+      <button id="shareNative" class="share-option w-full text-left p-3 rounded-lg border hover:bg-gray-50 color-transition">
+        <div class="font-medium">Share via Apps</div>
+        <div class="text-sm text-gray-500">Share to social media, messaging apps</div>
+      </button>
+      <button id="shareCopyLink" class="share-option w-full text-left p-3 rounded-lg border hover:bg-gray-50 color-transition">
+        <div class="font-medium">Copy Link</div>
+        <div class="text-sm text-gray-500">Copy shareable URL to clipboard</div>
+      </button>
+      <button id="shareCopyColors" class="share-option w-full text-left p-3 rounded-lg border hover:bg-gray-50 color-transition">
+        <div class="font-medium">Copy Colors</div>
+        <div class="text-sm text-gray-500">Copy all color codes</div>
+      </button>
+      <button id="shareTwitter" class="share-option w-full text-left p-3 rounded-lg border hover:bg-gray-50 color-transition">
+        <div class="font-medium">Share on Twitter</div>
+        <div class="text-sm text-gray-500">Post palette to Twitter</div>
+      </button>
+    </div>
+  </div>
+</div>
 
-<script src="script.js">
-</script>
+  <script src="script.js"></script>
 
 </body>
 </html>

@@ -55,64 +55,72 @@
 <body class="bg-white text-gray-800">
 
   <!-- Navigation -->
-   <nav class="flex justify-between shadow items-center px-4 py-3 border-b-[0.5px] border-gray-200">
-    <!-- Left side -->
-    <div class="flex items-center gap-2">
-      <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded flex items-center justify-center">
-        <span class="text-white font-bold text-sm">C</span>
-      </div>
-      <span class="font-bold text-lg">ColorScope</span>
-    </div>
-    <!-- Right side -->
-    <div class="flex items-center gap-4">
-    <!-- Tools Dropdown -->
-    <div class="relative">
-          <button id="toolsBtn" class="text-gray-600 text-base font-medium flex hover:text-blue-600 transition-colors">
-            Tools <i data-feather="chevron-down" class="w-4 h-4 mt-1.5"></i>
-          </button>
+  <nav class="sticky top-0 z-50">
+      <div
+        class="flex justify-between shadow items-center bg-white px-4 py-3 shadow-md border-b-[0.5px] border-gray-200"
+      >
+        <!-- Left side -->
+        <div class="flex items-center gap-2">
+          <div
+            class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded flex items-center justify-center"
+          >
+            <span class="text-white font-bold text-sm">C</span>
+          </div>
+          <span class="font-bold text-lg">ColorScope</span>
+        </div>
+        <!-- Right side -->
+        <div class="flex items-center gap-4">
+          <!-- Tools Dropdown -->
+          <div class="relative">
+            <button
+              id="toolsBtn"
+              class="text-black text-base font-medium flex hover:text-blue-600 transition-colors"
+            >
+              Tools <i data-feather="chevron-down" class="w-4 h-4 mt-1.5"></i>
+            </button>
 
-          <!-- Dropdown Menu -->
-           <div id="toolsDropdown"
+            <!-- Dropdown Menu -->
+            <div id="toolsDropdown"
             class="hidden overflow-hidden absolute right-0 mt-2 w-[100vh] h-[34vw] bg-white flex gap-5 rounded-xl shadow-xl border border-gray-200 z-50">
             
             <div class="flex flex-col m-4">
               <!-- Left Column -->
                 <a href="/src/index.html" class="group block rounded-xl hover:bg-green-100 cursor-pointer p-3 gap-4 flex">
-                <img src="assets/menu_icon_generate.svg" class="w-14 h-14" alt="">
+                <img src="/assets/menu_icon_generate.svg" class="w-14 h-14" alt="">
                 <div class="flex flex-col">
                     <h2 class="font-bold text-2xl text-gray-800 group-hover:text-green-800">Palette Generator</h2>
-                    <p class="text-gray-500 text-sm font-semibold">Create your palettes in seconds</p>
+                    <p class="text-gray-500 text-sm font-semibold group-hover:text-green-800">Create your palettes in seconds</p>
                     </div>
                   </a>
-              <a href="/src/explorePallete.html" class="group block rounded-xl hover:bg-pink-100 cursor-pointer p-3 gap-4 flex">
-                <img src="assets/menu_icon_explore.svg" class="w-14 h-14" alt="">
+              <a href="src/explorePallete.html" class="group block rounded-xl hover:bg-pink-100 cursor-pointer p-3 gap-4 flex">
+                <img src="/assets/menu_icon_explore.svg" class="w-14 h-14" alt="">
                 <div class="flex flex-col">
                     <h2 class="font-bold text-2xl text-gray-800 group-hover:text-pink-800">Explore Palettes</h2>
-                    <p class="text-gray-500 text-sm font-semibold">Browse millions of trending color schemes</p>
+                    <p class="text-gray-500 text-sm font-semibold group-hover:text-pink-800">Browse millions of trending color schemes</p>
                 </div>
               </a>
 
               <a href="/src/imagePicker.html" class="group block rounded-xl hover:bg-blue-100 cursor-pointer p-3 gap-4 flex">
-                <img src="assets/menu_icon_image_picker.svg" class="w-14 h-14" alt="" />
+                <img src="/assets/menu_icon_image_picker.svg" class="w-14 h-14" alt="" />
                 <div class="flex flex-col">
                 <h2 class="font-bold text-2xl text-gray-800 group-hover:text-blue-800">Image Picker</h2>
-                <p class="text-gray-500 text-sm font-semibold">Get beautiful palettes from your photos</p>
+                <p class="text-gray-500 text-sm font-semibold group-hover:text-blue-800">Get beautiful palettes from your photos</p>
                 </div>
               </a>
 
               <a href="/src/contrastChecker.html" class="group block rounded-xl hover:bg-yellow-100 cursor-pointer p-3 gap-4 flex">
-                <img src="assets/menu_icon_contrast_checker.svg" class="w-14 h-14" alt="">
+                <img src="/assets/menu_icon_contrast_checker.svg" class="w-14 h-14" alt="">
                 <div class="flex flex-col">
                     <h2 class="font-bold text-2xl text-gray-800 group-hover:text-yellow-800">Contrast Checker</h2>
-                    <p class="text-gray-500 text-sm font-semibold">Check the contrast between two colors</p>
+                    <p class="text-gray-500 text-sm font-semibold group-hover:text-yellow-800">Check the contrast between two colors</p>
                 </div>
               </a>
               
                 <a href="/src/gradientGenerator.html" class="group block rounded-xl hover:bg-purple-100 cursor-pointer p-3 gap-4 flex">
-                <img src="assets/menu_icon_visualizer.svg" class="w-14 h-14" alt="">
+                <img src="/assets/menu_icon_visualizer.svg" class="w-14 h-14" alt="">
                 <div class="flex flex-col">
                     <h2 class="font-bold text-2xl text-gray-800 group-hover:text-purple-800" >Gradient Generator</h2>
-                    <p class="text-gray-500 text-sm font-semibold">Preview your colors on real designs</p>
+                    <p class="text-gray-500 text-sm font-semibold group-hover:text-purple-800">Preview your colors on real designs</p>
                 </div>
               </a>
             </div>
@@ -128,13 +136,25 @@
                 <span class="hover:text-blue-600 cursor-pointer font-medium">Image Converter</span>
               </div>
           </div>
+          </div>
+          <div class="h-8 w-px bg-gray-300 mx-1"></div>
+          <button
+            class="text-pink-500 text-bse font-medium hover:text-pink-600 transition-colors">
+            Go Pro
+          </button>
+          <button
+            class="text-black text-base hover:text-gray-500 transition-colors"
+          >
+            Sign in
+          </button>
+          <button
+            class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors"
+          >
+            Sign up
+          </button>
         </div>
-      <div class="h-8 w-px bg-gray-300 mx-1"></div>
-      <button class="text-pink-500 text-bse font-medium hover:text-pink-600 transition-colors">Go Pro</button>
-      <button class="text-gray-600 text-base hover:text-gray-800 transition-colors">Sign in</button>
-      <button class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors">Sign up</button>
-    </div>
-  </nav>
+      </div>
+    </nav>
 
   <!-- Main -->
   <div class="flex flex-wrap md:flex-nowrap gap-8 p-10">
