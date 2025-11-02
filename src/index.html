@@ -273,7 +273,7 @@
   <body class="font-sans bg-gray-50 bg-white ">
     <!-- Main Content -->
     <main class="min-h-screen w-full">
-      <nav class="flex justify-between  top-0 bg-white items-center px-6 py-2 shadow z-99">
+      <nav class="flex justify-between border-b-1 border-b-gray-200 my-4  top-0 bg-white items-center px-6 py-2  z-99">
         <!-- Logo -->
         <div class="flex items-center gap-3">
           <div
@@ -471,34 +471,22 @@
               id="profileMenu"
               class="hidden absolute right-0 mt-2 w-40 bg-white bg-opacity-95 backdrop-blur-lg rounded-lg shadow-xl border border-gray-200 py-2 z-50"
             >
-              <a
-                href="#"
-                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >Dashboard</a
-              >
-              <a
-                href="#"
-                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >Profile</a
-              >
-              <a
-                href="#"
-                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >Account</a
-              >
-              <hr class="my-1 border-gray-200" />
-              <a
-                href="#"
-                id="signOutBtn"
-                class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                >Sign out</a
-              >
+                <a href="./dashboard.html" id="dashboardBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                  Dashboard
+                </a>
+                <a href="./dashboard.html" id="accountBtn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                  Account
+                </a>
+                <hr class="my-1 border-gray-200" />
+                <a id="signOutBtn" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100 cursor-pointer">
+                  Sign out
+                </a>
             </div>
           </div>
         </div>
       </nav>
 
-    <section class="fullElems palleteGenerator" id="0">
+    <section class="fullElems palleteGenerator " id="0">
             <!-- Header Navigation -->
     <header class="bg-white ">
       <!-- Control Panel -->
@@ -621,12 +609,6 @@
               </div>
             </div>
           </div>
-              <button
-                id="saveBtn"
-                class="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 color-transition"
-              >
-                <i data-feather="heart" class="w-4 h-4 inline mr-1"></i>Save
-              </button>
               <button
                 id="exportBtn"
                 class="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 color-transition"
@@ -792,7 +774,7 @@
       >
         <h1 class="text-2xl font-bold text-pink-500">Color Palette explorer</h1>
         <input
-          id="searchInput"
+          id="exploreSearchInput"
           type="text"
           placeholder="Search seed (e.g. blue, red, mint)..."
           class="border rounded px-3 py-2 w-72 focus:outline-none focus:ring focus:ring-pink-300 transition"
@@ -819,12 +801,12 @@
           <div class="space-y-4">
             <div class="flex justify-between">
               <h2 class="text-sm font-medium text-gray-500">Picked palettes</h2>
-              <button
+              <!-- <button
                 id="saveBtn"
                 class=" text-sm cursor-pointer font-medium text-gray-500 hover:text-gray-900 color-transition"
               >
                 <i data-feather="heart" class="w-4 h-4 inline mr-1"></i>Save
-              </button>
+              </button> -->
             </div>
           
         <!-- Palette Regeneration -->
@@ -1025,6 +1007,8 @@
   </div>
   
     </section>
+
+
     </main>
 
     <!-- Notifications -->

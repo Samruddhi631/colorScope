@@ -44,6 +44,7 @@ const NavigationController = (() => {
     bindNavigationEvents();
     checkAuthState();
     initializeFeatherIcons();
+
   }
 
   const bindNavigationEvents = () => {
@@ -59,7 +60,7 @@ const NavigationController = (() => {
       });
     }
 
-    // Close dropdown on outside click — allow clicks inside dropdown
+    // Close dropdown on outside click
     document.addEventListener('click', (e) => {
       if (!e.target.closest('#toolsBtn') && !e.target.closest('#toolsDropdown')) {
         toolsDropdown?.classList.add('hidden');
@@ -86,32 +87,30 @@ const NavigationController = (() => {
     }
   };
 
-// ---------- SPA SECTION SWITCHER ----------
-const toolButtons = document.querySelectorAll("#toolsDropdown .elem");
-const sections = document.querySelectorAll(".fullElems");
+  // ---------- SPA SECTION SWITCHER ----------
+  const toolButtons = document.querySelectorAll("#toolsDropdown .elem");
+  const sections = document.querySelectorAll(".fullElems");
 
-toolButtons.forEach((btn) => {
-  btn.addEventListener("click", () => {
-    const targetId = btn.id; // 0, 1, 2, etc.
-    console.log(targetId);
-    // Hide all sections
-    sections.forEach((section) => {
-      section.classList.add("hidden");
+  toolButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const targetId = btn.id; // 0, 1, 2, etc.
+      console.log(targetId);
+      // Hide all sections
+      sections.forEach((section) => {
+        section.classList.add("hidden");
+      });
+
+      // Show selected section
+      const targetSection = document.getElementById(targetId);
+      if (targetSection) {
+        console.log(targetSection);
+        sections[targetSection.id].classList.remove("hidden");
+      }
+
+      // Close the dropdown
+      document.getElementById("toolsDropdown").classList.add("hidden");
     });
-
-    // Show selected section
-    const targetSection = document.getElementById(targetId);
-    if (targetSection) {
-      console.log(targetSection)
-      sections[targetSection.id].classList.remove("hidden");
-    }
-
-    // Close the dropdown
-    document.getElementById("toolsDropdown").classList.add("hidden");
   });
-});
-
-
 
   const initializeFeatherIcons = () => {
     if (typeof feather !== 'undefined' && feather.replace) {
@@ -163,6 +162,7 @@ toolButtons.forEach((btn) => {
     initializeFeatherIcons
   };
 })();
+
 //Initalize Navigation Controller
 NavigationController.init();
 
@@ -348,11 +348,11 @@ const handleSignIn = async (e) => {
   NotificationManager.show("Signing in...", "info");
 
   try {
-    // ✅ Sign in using Firebase Authentication
+    // Sign in using Firebase Authentication
     const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
     const user = userCredential.user;
 
-    // ✅ Fetch user data from Firestore
+    // Fetch user data from Firestore
     const docRef = firebase.firestore().collection("users").doc(user.uid);
     const docSnap = await docRef.get();
 
@@ -2039,6 +2039,10 @@ const ContrastChecker = (function () {
   return { init };
 })();
 
+// ============================================================================
+// GRADIENT GENERATOR
+// ============================================================================
+
 const GradientGenerator = (() => {
   const preview = document.getElementById("gradientPreview");
   const color1 = document.getElementById("color1");
@@ -2107,6 +2111,11 @@ const GradientGenerator = (() => {
   return { init };
 })();
 
+// ============================================================================
+// DASHBOARD CONTROLLER
+// ============================================================================
+
+
 
 
 // =============================================================================
@@ -2121,6 +2130,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ImagePaletteGenerator.init();
   ContrastChecker.init();
   GradientGenerator.init();
+
   if (typeof feather !== 'undefined') {
     feather.replace();
   }
