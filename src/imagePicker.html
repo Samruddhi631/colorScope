@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Palette Picker with Sample Content</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/feather-icons"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    .picker {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border: 3px solid white;
+      border-radius: 50%;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      transform: translate(-50%, -50%);
+      cursor: grab;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      z-index: 10;
+    }
+    
+    .picker:hover {
+      transform: translate(-50%, -50%) scale(1.25);
+    }
+    
+    .picker.dragging {
+      transform: translate(-50%, -50%) scale(1.5);
+      cursor: grabbing;
+      z-index: 50;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    }
+    
+    .picker-label {
+      position: absolute;
+      top: -32px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: bold;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    
+    .magnifier {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      border: 2px solid white;
+      border-radius: 50%;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      pointer-events: none;
+      z-index: 50;
+      overflow: hidden;
+      display: none;
+    }
+    
+    .magnifier canvas {
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+    }
+    
+    .magnifier::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 2px;
+      height: 2px;
+      background: #ff0000;
+      border: 1px solid white;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 51;
+    }
+    
+    .palette-color {
+      height: 40px;
+      flex: 1 ;           /* each takes equal space */
+      min-width: 0;      /* allow shrinking */
+      transition: all 0.2s ease;
+    }
+    
+    .palette-color:first-child {
+      border-top-left-radius: 12px;
+      border-bottom-left-radius: 12px;
+    }
+    
+    .palette-color:last-child {
+      border-top-right-radius: 12px;
+      border-bottom-right-radius: 12px;
+    }
+    
+    .palette-color:hover {
+      transform: scale(1.05);
+    }
+    
+    .palette-color::after {
+      content: attr(data-number);
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 16px;
+      height: 16px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      font-size: 10px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+    
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 1000;
+    }
+    
+    .toast.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+ <nav class="sticky top-0 z-50">
+      <div
+        class="flex justify-between shadow items-center bg-white px-4 py-3 shadow-md border-b-[0.5px] border-gray-200"
+      >
+        <!-- Left side -->
+        <div class="flex items-center gap-2">
+          <div
+            class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded flex items-center justify-center"
+          >
+            <span class="text-white font-bold text-sm">C</span>
+          </div>
+          <span class="font-bold text-lg">ColorScope</span>
+        </div>
+        <!-- Right side -->
+        <div class="flex items-center gap-4">
+          <!-- Tools Dropdown -->
+          <div class="relative">
+            <button
+              id="toolsBtn"
+              class="text-black text-base font-medium flex hover:text-blue-600 transition-colors"
+            >
+              Tools <i data-feather="chevron-down" class="w-4 h-4 mt-1.5"></i>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div id="toolsDropdown"
+            class="hidden overflow-hidden absolute right-0 mt-2 w-[100vh] h-[34vw] bg-white flex gap-5 rounded-xl shadow-xl border border-gray-200 z-50">
+            
+            <div class="flex flex-col m-4">
+              <!-- Left Column -->
+                <a href="/src/index.html" class="group block rounded-xl hover:bg-green-100 cursor-pointer p-3 gap-4 flex">
+                <img src="/assets/menu_icon_generate.svg" class="w-14 h-14" alt="">
+                <div class="flex flex-col">
+                    <h2 class="font-bold text-2xl text-gray-800 group-hover:text-green-800">Palette Generator</h2>
+                    <p class="text-gray-500 text-sm font-semibold group-hover:text-green-800">Create your palettes in seconds</p>
+                    </div>
+                  </a>
+              <a href="/src/explorePallete.html" class="group block rounded-xl hover:bg-pink-100 cursor-pointer p-3 gap-4 flex">
+                <img src="/assets/menu_icon_explore.svg" class="w-14 h-14" alt="">
+                <div class="flex flex-col">
+                    <h2 class="font-bold text-2xl text-gray-800 group-hover:text-pink-800">Explore Palettes</h2>
+                    <p class="text-gray-500 text-sm font-semibold group-hover:text-pink-800">Browse millions of trending color schemes</p>
+                </div>
+              </a>
+
+              <a href="/src/imagePicker.html" class="group block rounded-xl hover:bg-blue-100 cursor-pointer p-3 gap-4 flex">
+                <img src="/assets/menu_icon_image_picker.svg" class="w-14 h-14" alt="" />
+                <div class="flex flex-col">
+                <h2 class="font-bold text-2xl text-gray-800 group-hover:text-blue-800">Image Picker</h2>
+                <p class="text-gray-500 text-sm font-semibold group-hover:text-blue-800">Get beautiful palettes from your photos</p>
+                </div>
+              </a>
+
+              <a href="/src/contrastChecker.html" class="group block rounded-xl hover:bg-yellow-100 cursor-pointer p-3 gap-4 flex">
+                <img src="/assets/menu_icon_contrast_checker.svg" class="w-14 h-14" alt="">
+                <div class="flex flex-col">
+                    <h2 class="font-bold text-2xl text-gray-800 group-hover:text-yellow-800">Contrast Checker</h2>
+                    <p class="text-gray-500 text-sm font-semibold group-hover:text-yellow-800">Check the contrast between two colors</p>
+                </div>
+              </a>
+              
+                <a href="/src/gradientGenerator.html" class="group block rounded-xl hover:bg-purple-100 cursor-pointer p-3 gap-4 flex">
+                <img src="/assets/menu_icon_visualizer.svg" class="w-14 h-14" alt="">
+                <div class="flex flex-col">
+                    <h2 class="font-bold text-2xl text-gray-800 group-hover:text-purple-800" >Gradient Generator</h2>
+                    <p class="text-gray-500 text-sm font-semibold group-hover:text-purple-800">Preview your colors on real designs</p>
+                </div>
+              </a>
+            </div>
+            <!-- Right Column (Links) -->
+              <div class="px-10 py-10 text-base text-black flex flex-col bg-gray-100 rounded-r-xl">
+                <span class="hover:text-blue-600 cursor-pointer font-medium">List of colors</span>
+                <span class="hover:text-blue-600 cursor-pointer font-medium">Browse Gradients</span>
+                <span class="hover:text-blue-600 cursor-pointer font-medium">Create a Gradient</span>
+                <span class="hover:text-blue-600 cursor-pointer font-medium">Make a Gradient Palette</span>
+                <span class="hover:text-blue-600 cursor-pointer font-medium">Color Picker</span>
+                <span class="hover:text-blue-600 cursor-pointer font-medium">Collage Maker</span>
+                <span class="hover:text-blue-600 cursor-pointer font-medium">List of Fonts</span>
+                <span class="hover:text-blue-600 cursor-pointer font-medium">Image Converter</span>
+              </div>
+          </div>
+          </div>
+          <div class="h-8 w-px bg-gray-300 mx-1"></div>
+          <button
+            class="text-pink-500 text-bse font-medium hover:text-pink-600 transition-colors">
+            Go Pro
+          </button>
+          <button
+            class="text-black text-base hover:text-gray-500 transition-colors"
+          >
+            Sign in
+          </button>
+          <button
+            class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors"
+          >
+            Sign up
+          </button>
+        </div>
+      </div>
+    </nav>
+  <div class="min-h-screen w-full flex justify-center items-center bg-gray-100">
+     <div class="bg-white rounded-2xl shadow-xl flex w-full max-w-6xl overflow-hidden">
+    <!-- Left Panel -->
+    <div class="w-1/3 p-6 flex flex-col gap-6 border-r border-gray-200">
+      <div class="space-y-4">
+        <h2 class="text-sm font-medium text-gray-500">Picked palettes</h2>
+        
+        <!-- Palette Regeneration -->
+        <div class="space-y-3">
+          <div class="flex items-center gap-3">
+            <span class="text-sm text-gray-500">Generate</span>
+            <button id="generateBtn" class="flex items-center gap-2 bg-blue-500 text-white px-3 py-1.5 rounded-lg hover:bg-blue-600 transition-colors">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                <path d="M21 3v5h-5"/>
+                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                <path d="M3 21v-5h5"/>
+              </svg>
+              Random
+            </button>
+          </div>
+        </div>
+
+        <h3 class="text-sm font-medium text-gray-700">Palette</h3>
+        
+        <!-- Palette Display -->
+        <div class=" p-2 flex items-center gap-1">
+          <div id="paletteColors" class="flex flex-1 gap-0"></div>
+          
+          <!-- Controls -->
+          <div class="flex flex-col gap-1">
+            <button id="increaseBtn" class="w-7 h-5 bg-gray-200 hover:bg-gray-300 rounded flex items-center justify-center text-sm font-bold text-gray-600 transition-colors">
+              +
+            </button>
+            <button id="decreaseBtn" class="w-7 h-5 bg-gray-200 hover:bg-gray-300 rounded flex items-center justify-center text-sm font-bold text-gray-600 transition-colors">
+              −
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- File Upload -->
+      <div class="space-y-4">
+        <input type="file" id="fileInput" accept="image/*" class="hidden">
+          <button id="browseBtn" class="w-full bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-6 hover:bg-gray-100 transition-colors flex flex-col items-center gap-2">
+          <i data-feather="upload" class="text-gray-400"></i>
+
+          <span class="text-sm text-gray-600">Browse image</span>
+        </button>
+
+        <button class="w-full bg-blue-500 text-white py-3 rounded-xl hover:bg-blue-600 transition-colors font-medium">
+          Export palette
+        </button>
+        
+      </div>
+    </div>
+
+    <!-- Right Panel - Image Preview -->
+    <div class="w-2/3 relative bg-gray-50 p-6 flex items-center justify-center">
+      <div id="imageContainer" class="relative max-w-full max-h-full">
+        <img id="previewImage" crossorigin="anonymous" class="max-w-[560px] rounded-xl select-none" alt="Preview">
+        <canvas id="hiddenCanvas" class="hidden"></canvas>
+        
+        <!-- Color Pickers Container -->
+        <div id="pickersContainer" class="absolute inset-0"></div>
+        
+        <!-- Magnifier -->
+        <div id="magnifier" class="magnifier">
+          <canvas id="magnifierCanvas" width="80" height="80"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // Global variables
+    let colors = [];
+    let currentColorCount = 5;
+    let dragging = null;
+    let imageLoaded = false;
+
+    // DOM elements
+    const previewImage = document.getElementById('previewImage');
+    const hiddenCanvas = document.getElementById('hiddenCanvas');
+    const pickersContainer = document.getElementById('pickersContainer');
+    const paletteColors = document.getElementById('paletteColors');
+    const fileInput = document.getElementById('fileInput');
+    const browseBtn = document.getElementById('browseBtn');
+    const generateBtn = document.getElementById('generateBtn');
+    const increaseBtn = document.getElementById('increaseBtn');
+    const decreaseBtn = document.getElementById('decreaseBtn');
+    const magnifier = document.getElementById('magnifier');
+    const magnifierCanvas = document.getElementById('magnifierCanvas');
+    const toast = document.getElementById('toast');
+
+    // Sample sunset image from Pexels
+    const sampleImageUrl = "https://images.unsplash.com/photo-1595804534811-0e389649da56?w=400&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwcm9maWxlLXBhZ2V8MTR8fHxlbnwwfHx8fHw%3D";
+
+    // Sample initial palette
+    const sampleColors = [
+      { hex: '#8B7CA3', nx: 0.15, ny: 0.2 },
+      { hex: '#3E4A5C', nx: 0.25, ny: 0.6 },
+      { hex: '#A4C3D2', nx: 0.5, ny: 0.35 },
+      { hex: '#5A738C', nx: 0.7, ny: 0.45 },
+      { hex: '#7FA7C7', nx: 0.85, ny: 0.25 }
+    ];
+
+    // Utility functions
+    function rgbToHex(r, g, b) {
+      return '#' + [r, g, b].map(v => Math.floor(v).toString(16).padStart(2, '0')).join('');
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 1400);
+    }
+
+    async function copyToClipboard(hex) {
+      try {
+        await navigator.clipboard.writeText(hex);
+        showToast(`Copied ${hex}`);
+      } catch (err) {
+        showToast('Copy failed');
+      }
+    }
+
+    // Load image to canvas
+    function loadImageToCanvas(img) {
+      const canvas = hiddenCanvas;
+      const ctx = canvas.getContext('2d');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      ctx.drawImage(img, 0, 0);
+    }
+
+    // Extract colors from image using simple dominant color algorithm
+    function extractColorsFromImage(count) {
+      if (!imageLoaded) return sampleColors.slice(0, count);
+
+      const canvas = hiddenCanvas;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      const imageData = ctx.getImageData(0, 0, w, h);
+      const data = imageData.data;
+
+      // Create color samples
+      const samples = [];
+      const step = Math.max(1, Math.floor(Math.sqrt(w * h) / 50));
+
+      for (let y = 0; y < h; y += step) {
+        for (let x = 0; x < w; x += step) {
+          const i = (y * w + x) * 4;
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          
+          // Find similar color or create new sample
+          let found = false;
+          for (const sample of samples) {
+            const dr = r - sample.r;
+            const dg = g - sample.g;
+            const db = b - sample.b;
+            const distance = Math.sqrt(dr * dr + dg * dg + db * db);
+            
+            if (distance < 50) {
+              sample.r = (sample.r * sample.count + r) / (sample.count + 1);
+              sample.g = (sample.g * sample.count + g) / (sample.count + 1);
+              sample.b = (sample.b * sample.count + b) / (sample.count + 1);
+              sample.count++;
+              found = true;
+              break;
+            }
+          }
+          
+          if (!found) {
+            samples.push({ r, g, b, x: x / w, y: y / h, count: 1 });
+          }
+        }
+      }
+
+      // Sort by count and take the most dominant colors
+      samples.sort((a, b) => b.count - a.count);
+      
+      return samples.slice(0, count).map(sample => ({
+        hex: rgbToHex(sample.r, sample.g, sample.b),
+        nx: sample.x,
+        ny: sample.y
+      }));
+    }
+
+    // Generate random palette
+    function generateRandomPalette() {
+      if (!imageLoaded) return;
+
+      const canvas = hiddenCanvas;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      const imageData = ctx.getImageData(0, 0, w, h);
+      const data = imageData.data;
+
+      const newColors = [];
+      
+      for (let i = 0; i < currentColorCount; i++) {
+        const nx = Math.random();
+        const ny = Math.random();
+        const x = Math.floor(nx * w);
+        const y = Math.floor(ny * h);
+        const pixelIndex = (y * w + x) * 4;
+        
+        const r = data[pixelIndex];
+        const g = data[pixelIndex + 1];
+        const b = data[pixelIndex + 2];
+        
+        newColors.push({
+          hex: rgbToHex(r, g, b),
+          nx,
+          ny
+        });
+      }
+      
+      colors = newColors;
+      renderPalette();
+      renderPickers();
+    }
+
+    // Sample color at position
+    function sampleColorAtPosition(colorIndex, nx, ny) {
+      if (!imageLoaded) return;
+
+      const canvas = hiddenCanvas;
+      const ctx = canvas.getContext('2d');
+      const x = Math.floor(nx * canvas.width);
+      const y = Math.floor(ny * canvas.height);
+      const imageData = ctx.getImageData(x, y, 1, 1);
+      const [r, g, b] = imageData.data;
+      const newHex = rgbToHex(r, g, b);
+
+      colors[colorIndex].hex = newHex;
+      colors[colorIndex].nx = nx;
+      colors[colorIndex].ny = ny;
+      
+      renderPalette();
+    }
+
+    // Show magnifier
+    function showMagnifier(clientX, clientY, nx, ny) {
+      if (!imageLoaded) return;
+
+      const canvas = hiddenCanvas;
+      const magnifierCtx = magnifierCanvas.getContext('2d');
+      const containerRect = pickersContainer.getBoundingClientRect();
+      
+      let magX = clientX - containerRect.left + 60;
+      let magY = clientY - containerRect.top - 60;
+      
+      if (magX + 80 > containerRect.width) magX = clientX - containerRect.left - 100;
+      if (magY < 0) magY = clientY - containerRect.top + 30;
+      
+      magnifier.style.left = magX + 'px';
+      magnifier.style.top = magY + 'px';
+      magnifier.style.display = 'block';
+
+      // Draw magnified area
+      const captureSize = 13;
+      const halfCapture = Math.floor(captureSize / 2);
+      const imageX = Math.floor(nx * canvas.width);
+      const imageY = Math.floor(ny * canvas.height);
+      
+      magnifierCtx.imageSmoothingEnabled = false;
+      magnifierCtx.clearRect(0, 0, 80, 80);
+      
+      const sourceX = Math.max(0, Math.min(canvas.width - captureSize, imageX - halfCapture));
+      const sourceY = Math.max(0, Math.min(canvas.height - captureSize, imageY - halfCapture));
+      
+      magnifierCtx.drawImage(
+        canvas,
+        sourceX, sourceY, captureSize, captureSize,
+        0, 0, 80, 80
+      );
+    }
+
+    // Hide magnifier
+    function hideMagnifier() {
+      magnifier.style.display = 'none';
+    }
+
+    // Render palette
+    function renderPalette() {
+      paletteColors.innerHTML = '';
+      colors.forEach((color, index) => {
+        const colorDiv = document.createElement('div');
+        colorDiv.className = 'palette-color';
+        colorDiv.style.backgroundColor = color.hex;
+        colorDiv.title = color.hex;
+        colorDiv.setAttribute('data-number', index + 1);
+        colorDiv.addEventListener('click', () => copyToClipboard(color.hex));
+        paletteColors.appendChild(colorDiv);
+      });
+    }
+
+    // Get picker position
+    function getPickerPosition(color) {
+      const imageRect = previewImage.getBoundingClientRect();
+      const containerRect = pickersContainer.getBoundingClientRect();
+
+      return {
+        left: (imageRect.left - containerRect.left) + color.nx * imageRect.width,
+        top: (imageRect.top - containerRect.top) + color.ny * imageRect.height
+      };
+    }
+
+    // Render pickers
+    function renderPickers() {
+      pickersContainer.innerHTML = '';
+      
+      colors.forEach((color, index) => {
+        const picker = document.createElement('div');
+        picker.className = 'picker';
+        picker.style.backgroundColor = color.hex;
+        
+        const label = document.createElement('div');
+        label.className = 'picker-label';
+        label.textContent = index + 1;
+        picker.appendChild(label);
+        
+        const pos = getPickerPosition(color);
+        picker.style.left = pos.left + 'px';
+        picker.style.top = pos.top + 'px';
+
+        // Mouse events
+        picker.addEventListener('mousedown', (e) => {
+          dragging = index;
+          picker.classList.add('dragging');
+          e.preventDefault();
+        });
+
+        pickersContainer.appendChild(picker);
+      });
+    }
+
+    // Handle mouse move
+    function handleMouseMove(e) {
+      if (dragging === null || !imageLoaded) return;
+
+      const imageRect = previewImage.getBoundingClientRect();
+      const containerRect = pickersContainer.getBoundingClientRect();
+
+      let xInside = e.clientX - imageRect.left;
+      let yInside = e.clientY - imageRect.top;
+      
+      xInside = Math.max(0, Math.min(imageRect.width, xInside));
+      yInside = Math.max(0, Math.min(imageRect.height, yInside));
+      
+      const nx = xInside / imageRect.width;
+      const ny = yInside / imageRect.height;
+
+      showMagnifier(e.clientX, e.clientY, nx, ny);
+      sampleColorAtPosition(dragging, nx, ny);
+      renderPickers();
+    }
+
+    // Handle mouse up
+    function handleMouseUp() {
+      if (dragging !== null) {
+        const picker = pickersContainer.children[dragging];
+        if (picker) picker.classList.remove('dragging');
+        dragging = null;
+        hideMagnifier();
+      }
+    }
+
+    // Handle image load - FIXED: Set imageLoaded before extracting colors
+    function handleImageLoad() {
+      loadImageToCanvas(previewImage);
+      imageLoaded = true;  // Move this line BEFORE extracting colors
+      const extractedColors = extractColorsFromImage(currentColorCount);
+      colors = extractedColors;
+      renderPalette();
+      renderPickers();
+    }
+
+    // Event listeners
+    previewImage.addEventListener('load', handleImageLoad);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+
+    browseBtn.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewImage.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    generateBtn.addEventListener('click', generateRandomPalette);
+
+    increaseBtn.addEventListener('click', () => {
+      if (currentColorCount < 12) {
+        currentColorCount++;
+        if (imageLoaded) {
+          const extractedColors = extractColorsFromImage(currentColorCount);
+          colors = extractedColors;
+          renderPalette();
+          renderPickers();
+        }
+      }
+    });
+
+    decreaseBtn.addEventListener('click', () => {
+      if (currentColorCount > 1) {
+        currentColorCount--;
+        colors = colors.slice(0, currentColorCount);
+        renderPalette();
+        renderPickers();
+      }
+    });
+
+    // Window resize handler
+    window.addEventListener('resize', () => {
+      if (imageLoaded) renderPickers();
+    });
+
+    // Initialize with sample data
+    function initialize() {
+      colors = sampleColors.slice(0, currentColorCount);
+      previewImage.src = sampleImageUrl;
+      renderPalette();
+    }
+    
+    toolsBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toolsDropdown.classList.toggle("hidden");
+  });
+
+  // Close dropdown on outside click
+  document.addEventListener("click", (e) => {
+    if (!toolsDropdown.contains(e.target) && !toolsBtn.contains(e.target)) {
+      toolsDropdown.classList.add("hidden");
+    }
+  });
+
+  // Close dropdown on ESC
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") toolsDropdown.classList.add("hidden");
+  });
+    // Start the app
+    initialize();
+     feather.replace();
+  </script>
+</body>
+</html>

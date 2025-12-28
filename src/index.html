@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ColorScope - Professional UI Color Palette Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+      * {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+      }
+
+      .color-transition {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .palette-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      }
+
+      .notification-enter {
+        animation: slideInRight 0.3s ease-out;
+      }
+
+      .notification-exit {
+        animation: slideOutRight 0.3s ease-in;
+      }
+
+      @keyframes slideInRight {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideOutRight {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+      }
+
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #a1a1a1;
+      }
+
+      /* Auth modal animations */
+
+      #authModalContent {
+        transform: scale(0.95);
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        }
+        .fade-in {
+            animation: fadeIn 0.6s ease-in-out forwards;
+        }
+        #toast {
+        position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 1000;
+      }
+      #toast.show {
+        opacity: 1;
+      }
+      .picker {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border: 3px solid white;
+      border-radius: 50%;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      transform: translate(-50%, -50%);
+      cursor: grab;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      z-index: 10;
+    }
+    
+    .picker:hover {
+      transform: translate(-50%, -50%) scale(1.25);
+    }
+    
+    .picker.dragging {
+      transform: translate(-50%, -50%) scale(1.5);
+      cursor: grabbing;
+      z-index: 50;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    }
+    
+    .picker-label {
+      position: absolute;
+      top: -32px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: bold;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    
+    .magnifier {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      border: 2px solid white;
+      border-radius: 50%;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      pointer-events: none;
+      z-index: 50;
+      overflow: hidden;
+      display: none;
+    }
+    
+    .magnifier canvas {
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+    }
+    
+    .magnifier::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 2px;
+      height: 2px;
+      background: #ff0000;
+      border: 1px solid white;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 51;
+    }
+    
+    .palette-color {
+      height: 40px;
+      flex: 1 ;           /* each takes equal space */
+      min-width: 0;      /* allow shrinking */
+      transition: all 0.2s ease;
+    }
+    
+    .palette-color:first-child {
+      border-top-left-radius: 12px;
+      border-bottom-left-radius: 12px;
+    }
+    
+    .palette-color:last-child {
+      border-top-right-radius: 12px;
+      border-bottom-right-radius: 12px;
+    }
+    
+    .palette-color:hover {
+      transform: scale(1.05);
+    }
+    
+    .palette-color::after {
+      content: attr(data-number);
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 16px;
+      height: 16px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      font-size: 10px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 10px;
+      border-radius: 5px;
+      outline: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      background: white;
+      border: 2px solid #3b82f6;
+      cursor: pointer;
+    }
+    input[type="range"]::-moz-range-thumb {
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      background: white;
+      border: 2px solid #3b82f6;
+      cursor: pointer;
+    }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #333;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      z-index: 9999;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    </style>
+  </head>
+  <body class="font-sans bg-gray-50 bg-white ">
+    <!-- Main Content -->
+    <main class="min-h-screen w-full">
+      <nav class="flex justify-between  top-0 bg-white items-center px-6 py-2 shadow z-99">
+        <!-- Logo -->
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 gradient-bg rounded-lg flex items-center justify-center shadow-lg"
+          >
+            <span class="text-white font-bold text-lg">C</span>
+          </div>
+          <div>
+            <h1 class="font-bold text-xl text-gray-900">ColorScope</h1>
+            <p class="text-xs text-gray-500">
+              Professional UI Palette Generator
+            </p>
+          </div>
+        </div>
+
+        <!-- Navigation Actions -->
+        <div class="flex items-center gap-6">
+          <!-- Tools Dropdown -->
+          <div class="relative">
+            <button
+              id="toolsBtn"
+              class="text-black text-base font-medium cursor-pointer flex hover:text-blue-600 transition-colors"
+            >
+              Tools <i data-feather="chevron-down" class="w-4 h-4 mt-1.5"></i>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div
+              id="toolsDropdown"
+              class="hidden absolute right-0 mt-2 w-165 h-120 bg-white flex gap-5 rounded-xl shadow-xl border border-gray-200 z-50"
+            >
+              <div class="allElems flex flex-col m-4">
+                <!-- Left Column -->
+                <div id="0"
+                  class="elem group block rounded-xl hover:bg-green-100 cursor-pointer p-3 gap-4 flex"
+                >
+                  <img
+                    src="/assets/menu_icon_generate.svg"
+                    class="w-14 h-14"
+                    alt=""
+                  />
+                  <div class="flex flex-col">
+                    <h2
+                      class="font-bold text-2xl text-gray-800 group-hover:text-green-800"
+                    >
+                      Palette Generator
+                    </h2>
+                    <p class="text-gray-500 text-sm font-semibold">
+                      Create your palettes in seconds
+                    </p>
+                  </div>
+                </div>
+                <div id="1"
+                  class="elem group block rounded-xl hover:bg-pink-100 cursor-pointer p-3 gap-4 flex"
+                >
+                  <img
+                    src="/assets/menu_icon_explore.svg"
+                    class="w-14 h-14"
+                    alt=""
+                  />
+                  <div class="flex flex-col">
+                    <h2
+                      class="font-bold text-2xl text-gray-800 group-hover:text-pink-800"
+                    >
+                      Explore Palettes
+                    </h2>
+                    <p class="text-gray-500 text-sm font-semibold">
+                      Browse millions of trending color schemes
+                    </p>
+                  </div>
+                </div>
+
+                <div id="2"
+                  class="elem group block rounded-xl hover:bg-blue-100 cursor-pointer p-3 gap-4 flex"
+                >
+                  <img
+                    src="/assets/menu_icon_image_picker.svg"
+                    class="w-14 h-14"
+                    alt=""
+                  />
+                  <div class="flex flex-col">
+                    <h2
+                      class="font-bold text-2xl text-gray-800 group-hover:text-blue-800"
+                    >
+                      Image Picker
+                    </h2>
+                    <p class="text-gray-500 text-sm font-semibold">
+                      Get beautiful palettes from your photos
+                    </p>
+                  </div>
+                </div>
+
+                <div id="3"
+                  class="elem group block rounded-xl hover:bg-yellow-100 cursor-pointer p-3 gap-4 flex"
+                >
+                  <img
+                    src="/assets/menu_icon_contrast_checker.svg"
+                    class="w-14 h-14"
+                    alt=""
+                  />
+                  <div class="flex flex-col">
+                    <h2
+                      class="font-bold text-2xl text-gray-800 group-hover:text-yellow-800"
+                    >
+                      Contrast Checker
+                    </h2>
+                    <p class="text-gray-500 text-sm font-semibold">
+                      Check the contrast between two colors
+                    </p>
+                  </div>
+                </div>
+
+                <div id="4"
+                  class="elem group block rounded-xl hover:bg-purple-100 cursor-pointer p-3 gap-4 flex"
+                >
+                  <img
+                    src="/assets/menu_icon_visualizer.svg"
+                    class="w-14 h-14"
+                    alt=""
+                  />
+                  <div class="flex flex-col">
+                    <h2
+                      class="font-bold text-2xl text-gray-800 group-hover:text-purple-800"
+                    >
+                      Gradient Generator
+                    </h2>
+                    <p class="text-gray-500 text-sm font-semibold">
+                      Preview your colors on real designs
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <!-- Right Column (Links) -->
+              <div
+                class="px-10 py-10 text-base text-black flex flex-col bg-gray-100 rounded-r-xl"
+              >
+                <span class="hover:text-blue-600 cursor-pointer font-medium"
+                  >List of colors</span
+                >
+                <span class="hover:text-blue-600 cursor-pointer font-medium"
+                  >Browse Gradients</span
+                >
+                <span class="hover:text-blue-600 cursor-pointer font-medium"
+                  >Create a Gradient</span
+                >
+                <span class="hover:text-blue-600 cursor-pointer font-medium"
+                  >Make a Gradient Palette</span
+                >
+                <span class="hover:text-blue-600 cursor-pointer font-medium"
+                  >Color Picker</span
+                >
+                <span class="hover:text-blue-600 cursor-pointer font-medium"
+                  >Collage Maker</span
+                >
+                <span class="hover:text-blue-600 cursor-pointer font-medium"
+                  >List of Fonts</span
+                >
+                <span class="hover:text-blue-600 cursor-pointer font-medium"
+                  >Image Converter</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="h-8 w-px bg-gray-300 mx-1"></div>
+          <button
+            class="text-pink-500 text-base cursor-pointer font-medium hover:text-pink-600 transition-colors"
+          >
+            Go Pro
+          </button>
+          <button
+            id="signInBtn"
+            class="text-black text-base cursor-pointer hover:text-gray-500 transition-colors"
+          >
+            Sign in
+          </button>
+          <button
+            id="signUpBtn"
+            class="bg-blue-500 text-white cursor-pointer px-3 py-1 rounded text-sm hover:bg-blue-600 transition-colors"
+          >
+            Sign up
+          </button>
+
+          <!-- Profile Icon (hidden by default) -->
+          <div id="profileSection" class="relative hidden">
+            <div
+              id="profileIcon"
+              class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors"
+            >
+              <span class="text-white font-semibold text-lg">S</span>
+            </div>
+
+            <!-- Profile Dropdown Menu -->
+            <div
+              id="profileMenu"
+              class="hidden absolute right-0 mt-2 w-40 bg-white bg-opacity-95 backdrop-blur-lg rounded-lg shadow-xl border border-gray-200 py-2 z-50"
+            >
+              <a
+                href="#"
+                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >Dashboard</a
+              >
+              <a
+                href="#"
+                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >Profile</a
+              >
+              <a
+                href="#"
+                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >Account</a
+              >
+              <hr class="my-1 border-gray-200" />
+              <a
+                href="#"
+                id="signOutBtn"
+                class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                >Sign out</a
+              >
+            </div>
+          </div>
+        </div>
+      </nav>
+
+    <section class="fullElems palleteGenerator" id="0">
+            <!-- Header Navigation -->
+    <header class="bg-white ">
+      <!-- Control Panel -->
+      <div class="bg-white border border-gray-200 px-6 py-3">
+        <div
+          class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6"
+        >
+          <!-- Left Side - Instructions -->
+          <div class="flex items-center gap-6">
+            <div>
+              <p class="text-gray-600">
+                Press
+                <kbd class="px-2 py-1 bg-gray-100 rounded text-xs font-mono"
+                  >Space</kbd
+                >
+                or click Generate for new palettes
+              </p>
+            </div>
+            <!-- <div
+              id="paletteInfo"
+              class="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-lg font-medium"
+            ></div> -->
+          </div>
+
+          <!-- Right Side - Controls -->
+          <div class="flex items-center gap-4">
+            <!-- Color Count -->
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-600 font-medium">Colors:</span>
+              <button
+                id="decreaseColors"
+                class="w-8 h-8 rounded-lg border border-gray-300 hover:border-gray-400 hover:bg-gray-50 color-transition flex items-center justify-center"
+              >
+                <i data-feather="minus" class="w-4 h-4"></i>
+              </button>
+              <span
+                id="colorCount"
+                class="w-8 text-center font-medium text-gray-900"
+                >5</span
+              >
+              <button
+                id="increaseColors"
+                class="w-8 h-8 rounded-lg border border-gray-300 hover:border-gray-400 hover:bg-gray-50 color-transition flex items-center justify-center"
+              >
+                <i data-feather="plus" class="w-4 h-4"></i>
+              </button>
+            </div>
+
+            <div class="w-px h-6 bg-gray-300"></div>
+
+            <!-- History Controls -->
+            <div class="flex items-center gap-2">
+              <button
+                id="undoBtn"
+                class="w-8 h-8 rounded-lg border border-gray-300 hover:border-gray-400 hover:bg-gray-50 color-transition flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <i data-feather="arrow-left" class="w-4 h-4"></i>
+              </button>
+              <button
+                id="redoBtn"
+                class="w-8 h-8 rounded-lg border border-gray-300 hover:border-gray-400 hover:bg-gray-50 color-transition flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <i data-feather="arrow-right" class="w-4 h-4"></i>
+              </button>
+            </div>
+
+            <div class="w-px h-6 bg-gray-300"></div>
+
+            <!-- Actions -->
+            <div class="flex items-center gap-2">
+              <div class="relative ">
+            <button
+              id="paletteTypeBtn"
+              class="flex items-center gap-2 px-2 py-1 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 color-transition"
+            >
+              <span id="currentPaletteType">UI Design</span>
+              <i data-feather="chevron-down" class="w-4 h-4"></i>
+            </button>
+
+            <!-- Palette Type Dropdown -->
+            <div
+              id="paletteTypeDropdown"
+              class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 z-50 py-2"
+            >
+              <div
+                class="palette-type-option px-4 py-3 hover:bg-blue-50 cursor-pointer"
+                data-type="ui-design"
+              >
+                <div class="font-medium text-gray-900">UI Design</div>
+                <div class="text-sm text-gray-500">
+                  Perfect for web and mobile interfaces
+                </div>
+              </div>
+              <div
+                class="palette-type-option px-4 py-3 hover:bg-purple-50 cursor-pointer"
+                data-type="brand-identity"
+              >
+                <div class="font-medium text-gray-900">Brand Identity</div>
+                <div class="text-sm text-gray-500">
+                  Corporate and brand color schemes
+                </div>
+              </div>
+              <div
+                class="palette-type-option px-4 py-3 hover:bg-green-50 cursor-pointer"
+                data-type="illustration"
+              >
+                <div class="font-medium text-gray-900">Illustration</div>
+                <div class="text-sm text-gray-500">
+                  Creative and artistic palettes
+                </div>
+              </div>
+              <div
+                class="palette-type-option px-4 py-3 hover:bg-yellow-50 cursor-pointer"
+                data-type="accessibility"
+              >
+                <div class="font-medium text-gray-900">Accessibility First</div>
+                <div class="text-sm text-gray-500">
+                  WCAG compliant high contrast
+                </div>
+              </div>
+            </div>
+          </div>
+              <button
+                id="saveBtn"
+                class="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 color-transition"
+              >
+                <i data-feather="heart" class="w-4 h-4 inline mr-1"></i>Save
+              </button>
+              <button
+                id="exportBtn"
+                class="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 color-transition"
+              >
+                <i data-feather="download" class="w-4 h-4 inline mr-1"></i
+                >Export
+              </button>
+              <button
+                id="shareBtn"
+                class="px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 color-transition"
+              >
+                <i data-feather="share-2" class="w-4 h-4 inline mr-1"></i>Share
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+      <!-- Export Modal -->
+    <div
+      id="exportModal"
+      class="fixed inset-0 bg-gray-800 bg-opacity-70 hidden items-center justify-center z-50"
+    >
+      <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold text-gray-900">Export Palette</h3>
+          <button
+            id="closeExportModal"
+            class="text-gray-400 hover:text-gray-600"
+          >
+            <i data-feather="x" class="w-6 h-6"></i>
+          </button>
+        </div>
+
+        <div class="space-y-3">
+          <button
+            class="export-option w-full text-left p-3 rounded-lg border hover:bg-gray-50 color-transition"
+            data-format="css"
+          >
+            <div class="font-medium">CSS Variables</div>
+            <div class="text-sm text-gray-500">:root CSS custom properties</div>
+          </button>
+          <button
+            class="export-option w-full text-left p-3 rounded-lg border hover:bg-gray-50 color-transition"
+            data-format="json"
+          >
+            <div class="font-medium">JSON</div>
+            <div class="text-sm text-gray-500">Structured data format</div>
+          </button>
+          <button
+            class="export-option w-full text-left p-3 rounded-lg border hover:bg-gray-50 color-transition"
+            data-format="adobe"
+          >
+            <div class="font-medium">Adobe ASE</div>
+            <div class="text-sm text-gray-500">Adobe Swatch Exchange</div>
+          </button>
+          <button
+            class="export-option w-full text-left p-3 rounded-lg border hover:bg-gray-50 color-transition"
+            data-format="url"
+          >
+            <div class="font-medium">Shareable URL</div>
+            <div class="text-sm text-gray-500">Copy direct link to palette</div>
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Share Modal (Optional - for more sharing options) -->
+    <div
+      id="shareModal"
+      class="fixed inset-0 bg-gray-800 bg-opacity-70 hidden items-center justify-center z-50"
+    >
+      <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-semibold text-gray-900">Share Palette</h3>
+          <button
+            id="closeShareModal"
+            class="text-gray-400 hover:text-gray-600"
+          >
+            <i data-feather="x" class="w-6 h-6"></i>
+          </button>
+        </div>
+
+        <div class="space-y-3">
+          <button
+            id="shareNative"
+            class="share-option w-full text-left p-3 rounded-lg border hover:bg-gray-50 color-transition"
+          >
+            <div class="font-medium">Share via Apps</div>
+            <div class="text-sm text-gray-500">
+              Share to social media, messaging apps
+            </div>
+          </button>
+          <button
+            id="shareCopyLink"
+            class="share-option w-full text-left p-3 rounded-lg border hover:bg-gray-50 color-transition"
+          >
+            <div class="font-medium">Copy Link</div>
+            <div class="text-sm text-gray-500">
+              Copy shareable URL to clipboard
+            </div>
+          </button>
+          <button
+            id="shareCopyColors"
+            class="share-option w-full text-left p-3 rounded-lg border hover:bg-gray-50 color-transition"
+          >
+            <div class="font-medium">Copy Colors</div>
+            <div class="text-sm text-gray-500">Copy all color codes</div>
+          </button>
+          <button
+            id="shareTwitter"
+            class="share-option w-full text-left p-3 rounded-lg border hover:bg-gray-50 color-transition"
+          >
+            <div class="font-medium">Share on Twitter</div>
+            <div class="text-sm text-gray-500">Post palette to Twitter</div>
+          </button>
+        </div>
+      </div>
+    </div>
+      <!-- Color Palette Display -->
+      <div class="bg-white shadow-sm border border-gray-200">
+        <div id="colorPalette" class="flex h-[76vh] relative">
+          <!-- Colors will be dynamically generated here -->
+        </div>
+      </div>
+
+      <!-- Palette Analytics -->
+      <div
+        id="paletteAnalytics"
+        class="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+      >
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+          Palette Analysis
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="text-center">
+            <div class="text-2xl font-bold text-blue-600" id="contrastScore">
+              -
+            </div>
+            <div class="text-sm text-gray-600 mt-1">Avg Contrast Ratio</div>
+          </div>
+          <div class="text-center">
+            <div
+              class="text-2xl font-bold text-green-600"
+              id="accessibilityScore"
+            >
+              -
+            </div>
+            <div class="text-sm text-gray-600 mt-1">WCAG AA Compliance</div>
+          </div>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-purple-600" id="harmonyScore">
+              -
+            </div>
+            <div class="text-sm text-gray-600 mt-1">Color Harmony</div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class=" hidden fullElems explorePellete" id="1">
+    <!--search bar-->
+    <div
+        class="flex justify-between items-center px-4 py-3 border-b-[0.5px] border-gray-200 bg-white"
+      >
+        <h1 class="text-2xl font-bold text-pink-500">Color Palette explorer</h1>
+        <input
+          id="searchInput"
+          type="text"
+          placeholder="Search seed (e.g. blue, red, mint)..."
+          class="border rounded px-3 py-2 w-72 focus:outline-none focus:ring focus:ring-pink-300 transition"
+        />
+      </div>
+    <!-- Error Box -->
+    <div id="errorBox" class="hidden text-red-600 text-center mt-4"></div>
+
+    <!-- Palette Grid -->
+    <div
+      id="paletteContainer"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6"
+    ></div>
+
+    <!-- Toast -->
+    <div id="toast">Copied!</div>
+    </section>
+    <section class=" hidden fullElems imagePicker" id="2">
+    <div class="min-h-screen w-full flex justify-center items-center bg-gray-100">
+      <div class="bg-white rounded-2xl shadow-xl flex w-full max-w-6xl overflow-hidden">
+        <!-- Left Panel -->
+          
+          <div class="w-1/3 p-6 flex flex-col gap-6 border-r border-gray-200">
+          <div class="space-y-4">
+            <div class="flex justify-between">
+              <h2 class="text-sm font-medium text-gray-500">Picked palettes</h2>
+              <button
+                id="saveBtn"
+                class=" text-sm cursor-pointer font-medium text-gray-500 hover:text-gray-900 color-transition"
+              >
+                <i data-feather="heart" class="w-4 h-4 inline mr-1"></i>Save
+              </button>
+            </div>
+          
+        <!-- Palette Regeneration -->
+        <div class="space-y-3">
+          <div class="flex items-center gap-3">
+            <span class="text-sm text-gray-500">Generate</span>
+            <button id="generateBtn" class="flex items-center gap-2 bg-blue-500 text-white px-3 py-1.5 rounded-lg hover:bg-blue-600 transition-colors">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                <path d="M21 3v5h-5"/>
+                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                <path d="M3 21v-5h5"/>
+              </svg>
+              Random
+            </button>
+          </div>
+        </div>
+
+        <h3 class="text-sm font-medium text-gray-700">Palette</h3>
+        
+        <!-- Palette Display -->
+        <div class=" p-2 flex items-center gap-1">
+          <div id="paletteColors" class="flex flex-1 gap-0"></div>
+          
+          <!-- Controls -->
+          <div class="flex flex-col gap-1">
+            <button id="increaseBtn" class="w-7 h-5 bg-gray-200 hover:bg-gray-300 rounded flex items-center justify-center text-sm font-bold text-gray-600 transition-colors">
+              +
+            </button>
+            <button id="decreaseBtn" class="w-7 h-5 bg-gray-200 hover:bg-gray-300 rounded flex items-center justify-center text-sm font-bold text-gray-600 transition-colors">
+              −
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- File Upload -->
+      <div class="space-y-4">
+        <input type="file" id="fileInput" accept="image/*" class="hidden">
+          <button id="browseBtn" class="w-full bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-6 hover:bg-gray-100 transition-colors flex flex-col items-center gap-2">
+          <i data-feather="upload" class="text-gray-400"></i>
+
+          <span class="text-sm text-gray-600">Browse image</span>
+        </button>
+
+        <button class="w-full bg-blue-500 text-white py-3 rounded-xl hover:bg-blue-600 transition-colors font-medium">
+          Export palette
+        </button>
+        
+      </div>
+    </div>
+
+    <!-- Right Panel - Image Preview -->
+    <div class="w-2/3 relative bg-gray-50 p-6 flex items-center justify-center">
+      <div id="imageContainer" class="relative max-w-full max-h-full">
+        <img id="previewImage" crossorigin="anonymous" class="max-w-[560px] rounded-xl select-none" alt="Preview">
+        <canvas id="hiddenCanvas" class="hidden"></canvas>
+        
+        <!-- Color Pickers Container -->
+        <div id="pickersContainer" class="absolute inset-0"></div>
+        
+        <!-- Magnifier -->
+        <div id="magnifier" class="magnifier">
+          <canvas id="magnifierCanvas" width="80" height="80"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+
+    </section>
+    <section class=" hidden fullElems contrastChecker" id="3">
+      <div class="flex items-center justify-center min-h-screen bg-white">
+     <div class="bg-white border rounded-xl shadow-sm p-6 max-w-6xl w-full grid grid-cols-2 gap-8">
+    
+    <!-- LEFT: Controls + Analytics -->
+    <div>
+      <!-- Color Pickers -->
+      <div class="grid grid-cols-2 gap-6 mb-6">
+        <div>
+          <label class="block text-sm font-medium mb-1">Text color</label>
+          <div class="flex items-center space-x-2">
+            <input type="color" id="textColor" value="#261145" class="w-12 h-10 border rounded ">
+            <input type="text" id="textHex" value="#261145" class="flex-1 border rounded p-2 text-sm">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Background color</label>
+          <div class="flex items-center space-x-2">
+            <input type="color" id="bgColor" value="#E6ACDB" class="w-12 h-10 border rounded">
+            <input type="text" id="bgHex" value="#E6ACDB" class="flex-1 border rounded p-2 text-sm">
+          </div>
+        </div>
+      </div>
+
+      <!-- Contrast Result -->
+<h2 class="text-sm font-medium mb-2">Contrast</h2>
+<div id="resultBox" class="rounded-lg overflow-hidden border">
+  <!-- Top: Contrast Score -->
+  <div class="flex items-center justify-between p-6" id="resultHeader">
+    <div id="contrastValue" class="text-5xl font-bold text-green-600">-</div>
+    <div class="text-right">
+      <div id="contrastLabel" class="text-xl font-semibold  text-green-600">—</div>
+      <div id="starRating" class="flex justify-end space-x-1 mt-1 text-green-100"></div>
+    </div>
+  </div>
+
+  <!-- Bottom: Small / Large text results -->
+  <div class="grid grid-cols-2 divide-x text-sm font-medium text-center">
+    <div id="smallTextResult" class="flex items-center justify-center gap-2 p-4 text-green-600">
+      Small text <span class="flex space-x-1" id="smallStars"></span>
+    </div>
+    <div id="largeTextResult" class="flex items-center justify-center gap-2 p-4  text-green-600">
+      Large text <span class="flex space-x-1" id="largeStars"></span>
+    </div>
+  </div>
+</div>
+
+
+      <!-- Description -->
+      <p id="descText" class="text-xs text-gray-600 mt-3">
+        Good contrast for small text (below 18pt) and great contrast for large text (above 18pt or bold above 14pt).
+        <a href="#" class="text-blue-600 underline">Click to enhance</a>
+      </p>
+    </div>
+
+    <!-- RIGHT: Preview Example -->
+    <div id="preview" class="rounded-xl flex flex-col items-center justify-center p-10">
+      <h2 class="text-2xl font-bold mb-4">Quote n. 1</h2>
+      <p class="text-base mb-4 max-w-md text-center">
+        Perfection is achieved, not when there is nothing more to add,
+        but when there is nothing left to take away.
+      </p>
+      <p class="text-sm font-semibold">Antoine de Saint-Exupéry</p>
+    </div>
+  </div>
+
+  </div>
+    </section>
+    <section class=" hidden fullElems gradientGenerator" id="4">
+      <div class="flex flex-wrap md:flex-nowrap bg-gray-100 gap-8 p-25">
+    <!-- Left Controls -->
+    <div class="flex-1 bg-white shadow-2xl rounded-xl shadow p-8 flex flex-col justify-between">
+      <!-- Gradient Slider -->
+      <div class="mb-6">
+        <input id="position1" type="range" min="0" max="100" value="0" class="w-full mb-2">
+        <input id="position2" type="range" min="0" max="100" value="100" class="w-full">
+      </div>
+
+      <div class="grid grid-cols-2 gap-6">
+        <div>
+          <label class="block font-semibold mb-2">Color 1</label>
+          <input id="color1" type="color" value="#ff0000" class="w-24 h-12 border rounded">
+        </div>
+        <div>
+          <label class="block font-semibold mb-2">Color 2</label>
+          <input id="color2" type="color" value="#0000ff" class="w-24 h-12 border rounded">
+        </div>
+        <div>
+          <label class="block font-semibold mb-2">Rotation</label>
+          <select id="rotation" class="w-full border p-2 rounded">
+            <option value="90deg">90°</option>
+            <option value="180deg">180°</option>
+            <option value="270deg">270°</option>
+            <option value="360deg">360°</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-semibold mb-2">Type</label>
+          <select id="type" class="w-full border p-2 rounded">
+            <option value="linear">Linear</option>
+            <option value="radial">Radial</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex justify-between mt-8">
+        <button onclick="randomGradient()" class="px-6 py-3 cursor-pointer bg-gray-100 border rounded-lg font-semibold hover:bg-gray-200">Random</button>
+        <button id="copyCssBtn" onclick="copyCSS()" class="px-6 cursor-pointer py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600">Copy CSS</button>
+      </div>
+    </div>
+
+    <!-- Right Preview -->
+    <div id="gradientPreview" class="flex-1 shadow-2xl  rounded-xl shadow border" style="min-height:400px;"></div>
+  </div>
+  <!-- Example Gradients -->
+  <div class="p-10">
+    <h2 class="text-2xl font-bold text-center mb-6">Example gradients</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mb-20">
+      <div class="h-32 rounded-lg cursor-pointer " data-gradient="linear-gradient(90deg, #00ff99 0%, #00e0ff 100%)" style="background: linear-gradient(90deg, #00ff99, #00e0ff)"></div>
+      <div class="h-32 rounded-lg cursor-pointer" data-gradient="linear-gradient(90deg, #0061ff 0%, #60efff 100%)" style="background: linear-gradient(90deg, #0061ff, #60efff)"></div>
+      <div class="h-32 rounded-lg cursor-pointer" data-gradient="linear-gradient(90deg, #ff3c7b 0%, #60a6ff 100%)" style="background: linear-gradient(90deg, #ff3c7b, #60a6ff)"></div>
+      <div class="h-32 rounded-lg cursor-pointer" data-gradient="linear-gradient(90deg, #4286f4 0%, #db38f0 100%)" style="background: linear-gradient(90deg, #4286f4, #db38f0)"></div>
+      <div class="h-32 rounded-lg cursor-pointer" data-gradient="linear-gradient(90deg, #ff8008 0%, #ffc837 100%)" style="background: linear-gradient(90deg, #ff8008, #ffc837)"></div>
+      <div class="h-32 rounded-lg cursor-pointer" data-gradient="linear-gradient(90deg, #ff416c 0%, #ff4b2b 100%)" style="background: linear-gradient(90deg, #ff416c, #ff4b2b)"></div>
+    </div>
+  </div>
+  
+    </section>
+    </main>
+
+    <!-- Notifications -->
+    <div id="notifications" class="fixed bottom-4 right-4 space-y-2 z-100">
+      <!-- Notifications will be dynamically added here -->
+    </div>
+
+    <!-- Auth Modal -->
+    <div
+      id="authModal"
+      class="fixed inset-0 bg-gray-800 bg-opacity-70 hidden items-center justify-center z-50"
+    >
+      <div
+        class="bg-white bg-opacity-95 backdrop-blur-xl rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 relative"
+        id="authModalContent"
+      >
+        <!-- Close Button -->
+        <button
+          id="closeAuthModal"
+          class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          <i data-feather="x" class="w-6 h-6"></i>
+        </button>
+
+        <!-- Initial View -->
+        <div id="authInitial">
+          <h2 class="text-4xl font-bold text-gray-900 text-center mb-2">
+            Hello!
+          </h2>
+          <p class="text-gray-600 text-center mb-8">
+            Use your email or another service to continue with Coolors.
+          </p>
+
+          <div class="space-y-3">
+            <button
+              class="w-full cursor-pointer flex items-center justify-center gap-3 px-6 py-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              <span class="text-2xl font-bold">G</span>
+              <span class="font-medium ">Continue with Google</span>
+            </button>
+
+            <button
+              class="w-full cursor-pointer flex items-center justify-center gap-3 px-6 py-3 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              <i data-feather="smartphone" class="w-5 h-5"></i>
+              <span class="font-medium">Continue with Apple</span>
+            </button>
+
+            <button
+              id="continueWithEmail"
+              class="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+            >
+              Continue with email
+            </button>
+          </div>
+
+          <p class="text-xs text-gray-500 text-center mt-6">
+            By continuing, you agree to our
+            <a href="#" class="text-blue-600 hover:underline"
+              >Terms of Service</a
+            >. Read our
+            <a href="#" class="text-blue-600 hover:underline">Privacy Policy</a
+            >.
+          </p>
+        </div>
+
+        <!-- Sign Up Form -->
+        <div id="authSignUp" class="hidden">
+          <h2 class="text-4xl font-bold text-gray-900 text-center mb-2">
+            Sign up
+          </h2>
+          <p class="text-gray-600 text-center mb-8">
+            Create an account with your email.
+          </p>
+
+          <form id="signUpForm" class="space-y-4">
+            <div>
+              <input
+                type="text"
+                id="signUpName"
+                placeholder="Full Name"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                required />
+              <p class="text-red-500 text-xs mt-1 hidden" id="nameError">
+                Name must be at least 2 characters
+              </p>
+            </div>
+
+            <div>
+              <input
+                type="email"
+                id="signUpEmail"
+                placeholder="Email"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                required />
+              <p class="text-red-500 text-xs mt-1 hidden" id="emailError">
+                Please enter a valid email address
+              </p>
+            </div>
+
+            <div class="relative">
+              <input
+                type="password"
+                id="signUpPassword"
+                placeholder="Password"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                required />
+              <button
+                type="button"
+                id="toggleSignUpPassword"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                <i data-feather="eye" class="w-5 h-5"></i>
+              </button>
+              <p class="text-red-500 text-xs mt-1 hidden" id="passwordError">
+                Password must be at least 6 characters
+              </p>
+            </div>
+
+            <div>
+              <input type="date" 
+              id="signUpBirthdate"
+              
+              class="w-full px-4 py-3 cursor-pointer border text-gray-500 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              required />
+              <p class="text-red-500 text-xs mt-1 hidden" id="addressError">
+                Birth date is required
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              class="w-full cursor-pointer px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+            >
+              Create your account
+            </button>
+          </form>
+
+          <p class="text-xs text-gray-500 text-center mt-6">
+            By continuing, you agree to our
+            <a href="#" class="text-blue-600 hover:underline"
+              >Terms of Service</a
+            >. Read our
+            <a href="#" class="text-blue-600 hover:underline">Privacy Policy</a
+            >.
+          </p>
+
+          <p class="text-center mt-6 text-sm">
+            Already have an account?
+            <button
+              id="switchToSignIn"
+              class="text-blue-600 hover:underline font-medium"
+            >
+              Sign in
+            </button>
+          </p>
+        </div>
+
+        <!-- Sign In Form -->
+        <div id="authSignIn" class="hidden">
+          <h2 class="text-4xl font-bold text-gray-900 text-center mb-2">
+            Sign in
+          </h2>
+          <p class="text-gray-600 text-center mb-8">
+            Sign in with your email here.
+          </p>
+
+          <form id="signInForm" class="space-y-4">
+            <div>
+              <input
+                type="email"
+                id="signInEmail"
+                placeholder="Email"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              />
+              <p class="text-red-500 text-xs mt-1 hidden" id="signInEmailError">
+                Please enter a valid email address
+              </p>
+            </div>
+
+            <div class="relative">
+              <input
+                type="password"
+                id="signInPassword"
+                placeholder="Password"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              />
+              <button
+                type="button"
+                id="toggleSignInPassword"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <i data-feather="eye" class="w-5 h-5"></i>
+              </button>
+              <p
+                class="text-red-500 text-xs mt-1 hidden"
+                id="signInPasswordError"
+              >
+                Password must be at least 6 characters
+              </p>
+            </div>
+
+            <button
+              type="submit"
+              class="w-full cursor-pointer px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+            >
+              Sign in
+            </button>
+          </form>
+
+          <p class="text-xs text-gray-500 text-center mt-6">
+            By continuing, you agree to our
+            <a href="#" class="text-blue-600 hover:underline"
+              >Terms of Service</a
+            >. Read our
+            <a href="#" class="text-blue-600 hover:underline">Privacy Policy</a
+            >.
+          </p>
+
+          <div class="text-center mt-6 space-y-2">
+            <p class="text-sm">
+              Forgot password?
+              <button
+                id="resetPassword"
+                class="text-blue-600 hover:underline font-medium"
+              >
+                Reset
+              </button>
+            </p>
+            <p class="text-sm">
+              Don't have an account?
+              <button
+                id="switchToSignUp"
+                class="text-blue-600 hover:underline font-medium"
+              >
+                Sign up
+              </button>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+
+    <script src="script.js"></script>
+  </body>
+</html>
