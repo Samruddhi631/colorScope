@@ -83,6 +83,26 @@ const NavigationController = (() => {
           toolsBtn?.setAttribute('aria-expanded', 'false');
         });
       });
+
+      // Normalize image srcs for GitHub Pages and add an error handler for debugging/fallback
+      toolsDropdown.querySelectorAll('img').forEach((img) => {
+        try {
+          const srcAttr = img.getAttribute('src') || '';
+          // Convert leading-root paths like '/assets/...' to relative 'assets/...'
+          if (srcAttr.startsWith('/assets/')) {
+            img.setAttribute('src', srcAttr.replace(/^\//, ''));
+          }
+        } catch (err) {
+          console.error('Error normalizing tool image src:', err);
+        }
+
+        // Log failures and use a small fallback so the UI remains usable
+        img.addEventListener('error', () => {
+          console.error('Tool icon failed to load:', img.getAttribute('src'));
+          // Use a neutral fallback image (repo has logo.png in assets)
+          img.src = 'assets/logo.png';
+        });
+      });
     }
   };
 
