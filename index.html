@@ -6,6 +6,8 @@
     <title>ColorScope - Professional UI Color Palette Generator</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://unpkg.com/feather-icons"></script>
+    <link rel="stylesheet" href="./styles.css">
+    <script src="./assets/someAsset.js"></script>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
@@ -752,38 +754,6 @@
         </div>
       </div>
 
-      <!-- Palette Analytics -->
-      <div
-        id="paletteAnalytics"
-        class="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
-      >
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">
-          Palette Analysis
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="text-center">
-            <div class="text-2xl font-bold text-blue-600" id="contrastScore">
-              -
-            </div>
-            <div class="text-sm text-gray-600 mt-1">Avg Contrast Ratio</div>
-          </div>
-          <div class="text-center">
-            <div
-              class="text-2xl font-bold text-green-600"
-              id="accessibilityScore"
-            >
-              -
-            </div>
-            <div class="text-sm text-gray-600 mt-1">WCAG AA Compliance</div>
-          </div>
-          <div class="text-center">
-            <div class="text-2xl font-bold text-purple-600" id="harmonyScore">
-              -
-            </div>
-            <div class="text-sm text-gray-600 mt-1">Color Harmony</div>
-          </div>
-        </div>
-      </div>
     </section>
     <section class=" hidden fullElems explorePellete" id="1">
     <!--search bar-->
@@ -1267,13 +1237,12 @@
         </div>
       </div>
     </div>
-
-    <!-- Firebase SDKs -->
+    <!-- firebase sdks -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
 
-    <script src="script.js"></script>
+    <script src="./script.js"></script>
   </body>
 </html>

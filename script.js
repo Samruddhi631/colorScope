@@ -1,4 +1,4 @@
-  const firebaseConfig = {
+const firebaseConfig = {
     apiKey: "AIzaSyAumzAsfbqrb_Afp0dZvgDCmBFj8DxMvrA",
     authDomain: "colorscope-475ba.firebaseapp.com",
     projectId: "colorscope-475ba",
