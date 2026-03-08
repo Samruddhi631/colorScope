@@ -131,6 +131,63 @@ toolButtons.forEach((btn) => {
   });
 });
 
+// ---------- MOBILE MENU TOGGLE ----------
+const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+const mobileNav = document.getElementById('mobileNav');
+const menuOverlay = document.getElementById('menuOverlay');
+const closeMenuBtn = document.getElementById('closeMenuBtn');
+const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
+
+if (mobileMenuBtn && mobileNav) {
+  // Open mobile menu
+  mobileMenuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    mobileNav.classList.remove('-translate-x-full');
+    menuOverlay.classList.remove('hidden');
+  });
+
+  // Close mobile menu via close button
+  if (closeMenuBtn) {
+    closeMenuBtn.addEventListener('click', () => {
+      mobileNav.classList.add('-translate-x-full');
+      menuOverlay.classList.add('hidden');
+    });
+  }
+
+  // Close mobile menu via overlay
+  if (menuOverlay) {
+    menuOverlay.addEventListener('click', () => {
+      mobileNav.classList.add('-translate-x-full');
+      menuOverlay.classList.add('hidden');
+    });
+  }
+
+  // Close mobile menu when nav item is clicked and switch section
+  mobileNavItems.forEach((item) => {
+    item.addEventListener('click', () => {
+      // Get the href attribute to find the target section
+      const href = item.getAttribute('href');
+      if (href && href.startsWith('#') && href !== '#0') {
+        const sectionId = href.substring(1);
+        // Hide all sections
+        sections.forEach((section) => {
+          section.classList.add("hidden");
+        });
+        
+        // Show selected section
+        const targetSection = document.getElementById(sectionId);
+        if (targetSection) {
+          sections[targetSection.id].classList.remove("hidden");
+        }
+      }
+      
+      // Close mobile menu
+      mobileNav.classList.add('-translate-x-full');
+      menuOverlay.classList.add('hidden');
+    });
+  });
+}
+
 
 
   const initializeFeatherIcons = () => {
@@ -603,6 +660,7 @@ const PaletteGenerator = (() => {
     });
 
     // Export and share functionality
+    document.getElementById('generatePaletteBtn')?.addEventListener('click', () => generateNewPalette());
     document.getElementById('exportBtn')?.addEventListener('click', () => showExportModal());
     document.getElementById('shareBtn')?.addEventListener('click', () => showShareModal());
     document.getElementById('closeShareModal')?.addEventListener('click', () => hideShareModal());
@@ -948,7 +1006,7 @@ const PaletteGenerator = (() => {
     const textColor = getOptimalTextColor(color);
     
     const box = document.createElement('div');
-    box.className = 'flex-1 relative group cursor-pointer color-transition h-[76vh] flex flex-col justify-center items-center p-6';
+    box.className = 'flex-1 relative group cursor-pointer color-transition h-20 md:h-[76vh] flex flex-col justify-center items-center p-6';
     box.style.backgroundColor = color;
     
     let hexSize = 'text-2xl md:text-3xl lg:text-4xl';

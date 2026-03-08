@@ -21,9 +21,16 @@
     </style>
 </head>
 <body class="bg-gray-50">
-    <section id="dashboard" class="min-h-screen flex">
+    <section id="dashboard" class="min-h-screen flex flex-col md:flex-row">
+        <!-- Mobile Menu Button -->
+        <button id="mobileMenuBtn" class="hidden md:hidden fixed top-4 left-4 z-50 p-2 bg-white border rounded-lg">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+        </button>
+
         <!-- Sidebar -->
-        <aside class="w-60 bg-white border-r flex flex-col">
+        <aside id="sidebar" class="fixed md:relative w-60 h-screen md:h-auto bg-white border-r flex flex-col transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-40">
             <!-- Logo -->
             <div class="p-6">
                 <h1 class="text-2xl font-bold text-blue-600">ColorScope</h1>
@@ -80,14 +87,14 @@
         </aside>
 
         <!-- Main Content -->
-        <main class="flex-1 flex flex-col overflow-hidden">
+        <main class="flex-1 flex flex-col overflow-hidden w-full">
             <!-- Top Header -->
-            <header class="flex justify-between items-center px-8 py-5 border-b bg-white">
-                <h1 class="text-3xl font-bold text-gray-900" id="dashboardTitle">Palettes</h1>
-                <div class="flex items-center gap-4">
-                    <input type="text" id="searchInput" placeholder="Search name or hex" class="border border-gray-300 rounded-lg px-4 py-2 w-72 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center transition">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <header class="flex flex-col md:flex-row justify-between items-start md:items-center px-4 md:px-8 py-4 md:py-5 border-b bg-white gap-4 md:gap-0">
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-900" id="dashboardTitle">Palettes</h1>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full md:w-auto">
+                    <input type="text" id="searchInput" placeholder="Search name or hex" class="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-48 md:w-72 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
+                    <button class="px-3 md:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center transition text-sm md:text-base whitespace-nowrap">
+                        <svg class="w-4 h-4 md:w-5 md:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
                         </svg>
                         Filters
@@ -98,77 +105,77 @@
             <!-- Content Sections -->
             <div class="flex-1 overflow-y-auto">
                 <!-- Palettes Section -->
-                <section id="palettesSection" class="p-8">
-                    <div id="palettesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <section id="palettesSection" class="p-4 md:p-8">
+                    <div id="palettesGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                         <!-- Palette cards will be added dynamically -->
                     </div>
-                    <div id="emptyPalettes" class="flex flex-col items-center justify-center text-gray-400 py-20">
-                        <svg class="w-24 h-24 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div id="emptyPalettes" class="flex flex-col items-center justify-center text-gray-400 py-12 md:py-20">
+                        <svg class="w-16 h-16 md:w-24 md:h-24 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
                         </svg>
-                        <p class="text-xl font-medium">You don't have any palette yet.</p>
+                        <p class="text-lg md:text-xl font-medium">You don't have any palette yet.</p>
                     </div>
                 </section>
 
                 <!-- Colors Section -->
-                <section id="colorsSection" class="hidden p-8">
-                    <div id="colorsGrid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                <section id="colorsSection" class="hidden p-4 md:p-8">
+                    <div id="colorsGrid" class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 md:gap-4">
                         <!-- Color cards will be added dynamically -->
                     </div>
-                    <div id="emptyColors" class="flex flex-col items-center justify-center text-gray-400 py-20">
-                        <svg class="w-24 h-24 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div id="emptyColors" class="flex flex-col items-center justify-center text-gray-400 py-12 md:py-20">
+                        <svg class="w-16 h-16 md:w-24 md:h-24 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
                         </svg>
-                        <p class="text-xl font-medium">You don't have any color yet.</p>
+                        <p class="text-lg md:text-xl font-medium">You don't have any color yet.</p>
                     </div>
                 </section>
 
                 <!-- Gradients Section -->
-                <section id="gradientsSection" class="hidden p-8">
-                    <div id="gradientsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <section id="gradientsSection" class="hidden p-4 md:p-8">
+                    <div id="gradientsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                         <!-- Gradient cards will be added dynamically -->
                     </div>
-                    <div id="emptyGradients" class="flex flex-col items-center justify-center text-gray-400 py-20">
-                        <svg class="w-24 h-24 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div id="emptyGradients" class="flex flex-col items-center justify-center text-gray-400 py-12 md:py-20">
+                        <svg class="w-16 h-16 md:w-24 md:h-24 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm0 8a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zm10-8a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zm0 8a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z"/>
                         </svg>
-                        <p class="text-xl font-medium">You don't have any gradient yet.</p>
+                        <p class="text-lg md:text-xl font-medium">You don't have any gradient yet.</p>
                     </div>
                 </section>
 
                 <!-- Account Section -->
-                <section id="accountSection" class="hidden p-8">
+                <section id="accountSection" class="hidden p-4 md:p-8">
                     <div class="max-w-3xl">
-                        <h2 class="text-2xl font-bold text-gray-900 mb-6">Account</h2>
-                        <p class="text-gray-600 mb-8">Update your profile and set your account preferences.</p>
+                        <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-2 md:mb-6">Account</h2>
+                        <p class="text-gray-600 text-sm md:text-base mb-6 md:mb-8">Update your profile and set your account preferences.</p>
 
                         <!-- Username -->
-                        <div class="bg-white rounded-lg border p-6 mb-6">
-                            <h3 class="text-xl font-semibold mb-2">Username</h3>
-                            <p class="text-gray-600 text-sm mb-4">If you change your username all the existing links to your profile on other websites will become 404.</p>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
-                            <input type="text" id="usernameInput" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" value=" ">
+                        <div class="bg-white rounded-lg border p-4 md:p-6 mb-4 md:mb-6">
+                            <h3 class="text-lg md:text-xl font-semibold mb-2">Username</h3>
+                            <p class="text-gray-600 text-xs md:text-sm mb-3 md:mb-4">If you change your username all the existing links to your profile on other websites will become 404.</p>
+                            <label class="block text-xs md:text-sm font-medium text-gray-700 mb-2">Username</label>
+                            <input type="text" id="usernameInput" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" value=" ">
                         </div>
 
                         <!-- Email -->
-                        <div class="bg-white rounded-lg border p-6 mb-6">
-                            <h3 class="text-xl font-semibold mb-4">Email</h3>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Email address</label>
-                            <input type="email" id="emailInput" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4" value=" ">
-                            <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition">Save</button>
+                        <div class="bg-white rounded-lg border p-4 md:p-6 mb-4 md:mb-6">
+                            <h3 class="text-lg md:text-xl font-semibold mb-3 md:mb-4">Email</h3>
+                            <label class="block text-xs md:text-sm font-medium text-gray-700 mb-2">Email address</label>
+                            <input type="email" id="emailInput" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3 md:mb-4 text-sm" value=" ">
+                            <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 md:px-6 py-2 rounded-lg transition text-sm">Save</button>
                         </div>
 
                         <!-- Password -->
-                        <div class="bg-white rounded-lg border p-6 mb-6">
-                            <h3 class="text-xl font-semibold mb-2">Create a Password</h3>
-                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                                <p class="text-blue-800 text-sm">Create a password to access with your email where Google and Apple are not available.</p>
+                        <div class="bg-white rounded-lg border p-4 md:p-6 mb-4 md:mb-6">
+                            <h3 class="text-lg md:text-xl font-semibold mb-2">Create a Password</h3>
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4 mb-3 md:mb-4">
+                                <p class="text-blue-800 text-xs md:text-sm">Create a password to access with your email where Google and Apple are not available.</p>
                             </div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Choose a password</label>
-                            <input type="password" id="passwordInput" placeholder="Min 8 characters" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Repeat password</label>
-                            <input type="password" id="repeatPasswordInput" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4">
-                            <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg transition">Save</button>
+                            <label class="block text-xs md:text-sm font-medium text-gray-700 mb-2">Choose a password</label>
+                            <input type="password" id="passwordInput" placeholder="Min 8 characters" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3 md:mb-4 text-sm">
+                            <label class="block text-xs md:text-sm font-medium text-gray-700 mb-2">Repeat password</label>
+                            <input type="password" id="repeatPasswordInput" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3 md:mb-4 text-sm">
+                            <button class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 md:px-6 py-2 rounded-lg transition text-sm">Save</button>
                         </div>
                     </div>
                   </section>
@@ -557,6 +564,32 @@
         // Initialize with palettes section
         switchSection('palettes');
         feather.replace();
+
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebar = document.getElementById('sidebar');
+        
+        if (mobileMenuBtn) {
+            mobileMenuBtn.style.display = 'block';
+            
+            mobileMenuBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('-translate-x-full');
+            });
+
+            // Close sidebar when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!sidebar.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+                    sidebar.classList.add('-translate-x-full');
+                }
+            });
+
+            // Close sidebar when a nav item is clicked
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    sidebar.classList.add('-translate-x-full');
+                });
+            });
+        }
     </script>
 </body>
 </html>
